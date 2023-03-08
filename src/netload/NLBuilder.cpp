@@ -57,6 +57,7 @@
 #include <microsim/MSEdgeWeightsStorage.h>
 #include <microsim/MSStateHandler.h>
 #include <microsim/MSDriverState.h>
+#include <microsim/MSPerIvan.h>
 #include <microsim/trigger/MSTriggeredRerouter.h>
 #include <traci-server/TraCIServer.h>
 
@@ -360,6 +361,7 @@ NLBuilder::initRandomness() {
     RandHelper::initRandGlobal(MSRouteHandler::getParsingRNG());
     RandHelper::initRandGlobal(MSDevice::getEquipmentRNG());
     RandHelper::initRandGlobal(OUProcess::getRNG());
+    RandHelper::initRandGlobal(OUProcessIV::getRNG());
     RandHelper::initRandGlobal(MSDevice_ToC::getResponseTimeRNG());
     RandHelper::initRandGlobal(MSDevice_BTreceiver::getRecognitionRNG());
     MSLane::initRNGs(OptionsCont::getOptions());

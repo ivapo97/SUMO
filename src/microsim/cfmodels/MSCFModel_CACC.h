@@ -171,7 +171,7 @@ public:
      */
     double maximumLaneSpeedCF(const MSVehicle* const veh, double maxSpeed, double maxSpeedLane) const {
         double result = MIN2(maxSpeed, maxSpeedLane);
-        if (myApplyDriverstate) {
+        if (myApplyDriverstate || myApplyPerIvan) {
             applyOwnSpeedPerceptionError(veh, result);
         }
         return result;
@@ -247,6 +247,7 @@ private:
     double myCollisionAvoidanceGainGapDot;
     double myHeadwayTimeACC;
     double myApplyDriverstate;
+    double myApplyPerIvan;
     double myEmergencyThreshold;
     double mySpeedControlMinGap;
 

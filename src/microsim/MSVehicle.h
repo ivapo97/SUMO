@@ -63,7 +63,9 @@ class MSJunction;
 class MSLeaderInfo;
 class MSLeaderDistanceInfo;
 class MSDevice_DriverState;
+class MSDevice_PerIvan;
 class MSSimpleDriverState;
+class MSSimplePerIvan;
 class MSDevice_Friction;
 
 
@@ -974,6 +976,13 @@ public:
 
     std::shared_ptr<MSSimpleDriverState> getDriverState() const;
 
+    /** @brief Returns the vehicle driver's state
+     *
+     * @return The vehicle driver's state
+     */
+
+    std::shared_ptr<MSSimplePerIvan> getPerIvan() const;
+
     /** @brief Returns the current friction on the road as perceived by the friction device
      *
      * @return The vehicle's perceived friction
@@ -1008,6 +1017,12 @@ public:
      */
     inline bool hasDriverState() const {
         return myDriverState != nullptr;
+    }
+
+    /** @brief Whether this vehicle is equipped with a MSDriverState
+     */
+    inline bool hasPerIvan() const {
+        return myPerIvan != nullptr;
     }
 
     /// @brief Returns the remaining stop duration for a stopped vehicle or 0
@@ -1857,6 +1872,9 @@ protected:
 
     /// @brief This vehicle's driver state @see MSDriverState
     MSDevice_DriverState* myDriverState;
+
+    /// @brief This vehicle's driver state @see MSPerIvan
+    MSDevice_PerIvan* myPerIvan;
 
     /// @brief This vehicle's friction perception
     MSDevice_Friction* myFrictionDevice;
