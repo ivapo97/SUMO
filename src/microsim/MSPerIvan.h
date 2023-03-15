@@ -143,6 +143,15 @@ public:
     inline double getPersistentHeadwayError() const {
         return myPersistentHeadwayError;
     }
+    inline double getOptimalPerceptionRange() const {
+        return myOptimalPerceptionRange;
+    }  
+    inline double getMaximalPerceptionRange() const {
+        return myMaximalPerceptionRange;
+    }   
+    inline double getMaxHeadwayError() const {
+        return myMaxHeadwayError;
+    }
     inline double getFreeSpeedErrorCoefficient() const {
         return myFreeSpeedErrorCoefficient;
     }
@@ -204,6 +213,15 @@ public:
     }
     inline void setPersistentHeadwayError(const double value) {
         myPersistentHeadwayError = value;
+    }
+    inline void setOptimalPerceptionRange(const double value) {
+        myOptimalPerceptionRange = value;
+    }
+    inline void setMaximalPerceptionRange(const double value) {
+        myMaximalPerceptionRange = value;
+    }
+    inline void setMaxHeadwayError(const double value) {
+        myMaxHeadwayError = value;
     }    
     inline void setFreeSpeedErrorCoefficient(const double value) {
         myFreeSpeedErrorCoefficient = value;
@@ -315,6 +333,13 @@ private:
 
     /// @brief Persistent headway error
     double myPersistentHeadwayError;
+    /// @brief Headway range without increase in errors
+    double myOptimalPerceptionRange;
+    /// @brief Max. headway range
+    double myMaximalPerceptionRange;
+    /// @brief Error at max. headway range
+    double myMaxHeadwayError;
+
     /// @brief Thresholds above a change in the corresponding quantity is perceived.
     /// @note  In the comparison, we multiply the actual change amount by the current
     ///       gap to the object to reflect a more precise perception if the object is closer.
@@ -703,6 +728,9 @@ struct PerIvanDefaults {
     static double headwayChangePerceptionThreshold;
     static double headwayErrorCoefficient;
     static double persistentHeadwayError;
+    static double optimalPerceptionRange;
+    static double maximalPerceptionRange;
+    static double maxHeadwayError;
     static double freeSpeedErrorCoefficient;
     static double maximalReactionTimeFactor;
 };

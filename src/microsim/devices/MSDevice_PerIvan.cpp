@@ -74,6 +74,12 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.addDescription("device.perivan.headwayErrorCoefficient", TL("Per Ivan Device"), TL("General scaling coefficient for applying the error to the perceived distance (error also scales with distance)."));
     oc.doRegister("device.perivan.persistentHeadwayError", new Option_Float(PerIvanDefaults::persistentHeadwayError));
     oc.addDescription("device.perivan.persistentHeadwayError", TL("Per Ivan Device"), TL("Persistent headway error."));
+    oc.doRegister("device.perivan.optimalPerceptionRange", new Option_Float(PerIvanDefaults::optimalPerceptionRange));
+    oc.addDescription("device.perivan.optimalPerceptionRange", TL("Per Ivan Device"), TL("Headway range without increase in errors."));
+    oc.doRegister("device.perivan.maximalPerceptionRange", new Option_Float(PerIvanDefaults::maximalPerceptionRange));
+    oc.addDescription("device.perivan.maximalPerceptionRange", TL("Per Ivan Device"), TL("Max. headway range."));
+    oc.doRegister("device.perivan.maxHeadwayError", new Option_Float(PerIvanDefaults::maxHeadwayError));
+    oc.addDescription("device.perivan.maxHeadwayError", TL("Per Ivan Device"), TL("Error at max. headway range."));    
     oc.doRegister("device.perivan.freeSpeedErrorCoefficient", new Option_Float(PerIvanDefaults::freeSpeedErrorCoefficient));
     oc.addDescription("device.perivan.freeSpeedErrorCoefficient", TL("Per Ivan Device"), TL("General scaling coefficient for applying the error to the vehicle's own speed when driving without a leader (error also scales with own speed)."));
     oc.doRegister("device.perivan.speedDifferenceChangePerceptionThreshold", new Option_Float(PerIvanDefaults::speedDifferenceChangePerceptionThreshold));
@@ -90,7 +96,8 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
 void
 MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>& into) {
     OptionsCont& oc = OptionsCont::getOptions();
-    // ToC device implies perivan
+    ///@todo: what is this about?
+    // ToC device implies this device 
     if (equippedByDefaultAssignmentOptions(oc, "perivan", v, false) || equippedByDefaultAssignmentOptions(oc, "toc", v, false)) {
         const double minAwareness = getMinAwareness(v, oc);
         const double initialAwareness = getInitialAwareness(v, oc);
@@ -101,6 +108,9 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
         const double headwayChangePerceptionThreshold = getHeadwayChangePerceptionThreshold(v, oc);
         const double headwayErrorCoefficient = getHeadwayErrorCoefficient(v, oc);
         const double persistentHeadwayError = getPersistentHeadwayError(v, oc);
+        const double optimalPerceptionRange = getOptimalPerceptionRange(v, oc);
+        const double maximalPerceptionRange = getMaximalPerceptionRange(v, oc);
+        const double maxHeadwayError = getMaxHeadwayError(v, oc);
         const double freeSpeedErrorCoefficient = getFreeSpeedErrorCoefficient(v, oc);
         const double maximalReactionTime = getMaximalReactionTime(v, oc);
         // build the device
@@ -114,6 +124,9 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
             headwayChangePerceptionThreshold,
             headwayErrorCoefficient,
             persistentHeadwayError,
+            optimalPerceptionRange,
+            maximalPerceptionRange,
+            maxHeadwayError,
             freeSpeedErrorCoefficient,
             maximalReactionTime);
         into.push_back(device);
@@ -158,6 +171,18 @@ MSDevice_PerIvan::getPersistentHeadwayError(const SUMOVehicle& v, const OptionsC
     return getFloatParam(v, oc, "perivan.persistentHeadwayError", PerIvanDefaults::persistentHeadwayError, false);
 }
 double
+MSDevice_PerIvan::getOptimalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.optimalPerceptionRange", PerIvanDefaults::optimalPerceptionRange, false);
+}
+double
+MSDevice_PerIvan::getMaximalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.maximalPerceptionRange", PerIvanDefaults::maximalPerceptionRange, false);
+}
+double
+MSDevice_PerIvan::getMaxHeadwayError(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.maxHeadwayError", PerIvanDefaults::maxHeadwayError, false);
+}
+double
 MSDevice_PerIvan::getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.freeSpeedErrorCoefficient", PerIvanDefaults::freeSpeedErrorCoefficient, false);
 }
@@ -180,6 +205,9 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     double headwayChangePerceptionThreshold,
     double headwayErrorCoefficient,
     double persistentHeadwayError,
+    double optimalPerceptionRange,
+    double maximalPerceptionRange,
+    double maxHeadwayError,
     double freeSpeedErrorCoefficient,
     double maximalReactionTime) :
     MSVehicleDevice(holder, id),
@@ -192,6 +220,9 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     myHeadwayChangePerceptionThreshold(headwayChangePerceptionThreshold),
     myHeadwayErrorCoefficient(headwayErrorCoefficient),
     myPersistentHeadwayError(persistentHeadwayError),
+    myOptimalPerceptionRange(optimalPerceptionRange),
+    myMaximalPerceptionRange(maximalPerceptionRange),
+    myMaxHeadwayError(maxHeadwayError),
     myFreeSpeedErrorCoefficient(freeSpeedErrorCoefficient),
     myMaximalReactionTime(maximalReactionTime) {
     // Take care! Holder is currently being constructed. Cast occurs before completion.
@@ -224,6 +255,9 @@ MSDevice_PerIvan::initPerIvan() {
     myPerIvan->setSpeedDifferenceErrorCoefficient(mySpeedDifferenceErrorCoefficient);
     myPerIvan->setHeadwayErrorCoefficient(myHeadwayErrorCoefficient);
     myPerIvan->setPersistentHeadwayError(myPersistentHeadwayError);
+    myPerIvan->setOptimalPerceptionRange(myOptimalPerceptionRange);
+    myPerIvan->setMaximalPerceptionRange(myMaximalPerceptionRange);   
+    myPerIvan->setMaxHeadwayError(myMaxHeadwayError);
     myPerIvan->setFreeSpeedErrorCoefficient(myFreeSpeedErrorCoefficient);
     myPerIvan->setSpeedDifferenceChangePerceptionThreshold(mySpeedDifferenceChangePerceptionThreshold);
     myPerIvan->setHeadwayChangePerceptionThreshold(myHeadwayChangePerceptionThreshold);
@@ -275,6 +309,15 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
     }
     else if (key == "persistentHeadwayError") {
         return toString(myPerIvan->getPersistentHeadwayError());
+    }
+    else if (key == "optimalPerceptionRange") {
+        return toString(myPerIvan->getOptimalPerceptionRange());
+    }
+    else if (key == "maximalPerceptionRange") {
+        return toString(myPerIvan->getMaximalPerceptionRange());
+    } 
+    else if (key == "maxHeadwayError") {
+        return toString(myPerIvan->getMaxHeadwayError());
     }    
     else if (key == "speedDifferenceChangePerceptionThreshold") {
         return toString(myPerIvan->getSpeedDifferenceChangePerceptionThreshold());
@@ -332,7 +375,16 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
     }
     else if (key == "persistentHeadwayError") {
         myPerIvan->setPersistentHeadwayError(StringUtils::toDouble(value));
-    }    
+    } 
+    else if (key == "optimalPerceptionRange") {
+        myPerIvan->setOptimalPerceptionRange(StringUtils::toDouble(value));
+    }
+    else if (key == "maximalPerceptionRange") {
+        myPerIvan->setMaximalPerceptionRange(StringUtils::toDouble(value));
+    }
+    else if (key == "maxHeadwayError") {
+        myPerIvan->setMaxHeadwayError(StringUtils::toDouble(value));
+    }     
     else if (key == "freeSpeedErrorCoefficient") {
         myPerIvan->setFreeSpeedErrorCoefficient(StringUtils::toDouble(value));
     }

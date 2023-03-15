@@ -88,7 +88,10 @@ private:
     static double getSpeedDifferenceChangePerceptionThreshold(const SUMOVehicle& v, const OptionsCont& oc);
     static double getHeadwayChangePerceptionThreshold(const SUMOVehicle& v, const OptionsCont& oc);
     static double getHeadwayErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getPersistentHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);    
+    static double getPersistentHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);  
+    static double getOptimalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc); 
+    static double getMaximalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMaxHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);    
     static double getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
@@ -126,6 +129,9 @@ private:
         double headwayChangePerceptionThreshold,
         double headwayErrorCoefficient,
         double persistentHeadwayError,
+        double optimalPerceptionRange,
+        double maximalPerceptionRange,
+        double maxHeadwayError,
         double freeSpeedErrorCoefficient,
         double maximalReactionTime);
 
@@ -148,6 +154,9 @@ private:
     double myHeadwayChangePerceptionThreshold;
     double myHeadwayErrorCoefficient;
     double myPersistentHeadwayError;
+    double myOptimalPerceptionRange;
+    double myMaximalPerceptionRange;
+    double myMaxHeadwayError;
     double myFreeSpeedErrorCoefficient;
     double myMaximalReactionTime;
     /// @}

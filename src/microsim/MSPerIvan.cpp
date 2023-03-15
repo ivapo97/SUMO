@@ -84,6 +84,9 @@ double PerIvanDefaults::errorNoiseIntensityCoefficient = 0.2;
 double PerIvanDefaults::speedDifferenceErrorCoefficient = 0.15;
 double PerIvanDefaults::headwayErrorCoefficient = 0.75;
 double PerIvanDefaults::persistentHeadwayError = 0.0;
+double PerIvanDefaults::optimalPerceptionRange = 50.0;
+double PerIvanDefaults::maximalPerceptionRange = 150.0;
+double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is larger than persistentHeadwayError  
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -135,7 +138,10 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myErrorNoiseIntensityCoefficient(PerIvanDefaults::errorNoiseIntensityCoefficient),
     mySpeedDifferenceErrorCoefficient(PerIvanDefaults::speedDifferenceErrorCoefficient),
     myHeadwayErrorCoefficient(PerIvanDefaults::headwayErrorCoefficient),
-    myPersistentHeadwayError(PerIvanDefaults::persistentHeadwayError),    
+    myPersistentHeadwayError(PerIvanDefaults::persistentHeadwayError),  
+    myOptimalPerceptionRange(PerIvanDefaults::optimalPerceptionRange),
+    myMaximalPerceptionRange(PerIvanDefaults::maximalPerceptionRange),
+    myMaxHeadwayError(PerIvanDefaults::maxHeadwayError),    
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -275,7 +281,20 @@ MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
 
 double
 MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
-    const double perceivedGap = trueGap + myPersistentHeadwayError;
+    //ellipse error
+    double perceivedGapError;
+    if (trueGap<myOptimalPerceptionRange) {
+        perceivedGapError = myPersistentHeadwayError;
+    }
+    else if (trueGap<myMaximalPerceptionRange) {
+        //perceivedGapError = ((myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - ((trueGap - myMaxHeadwayError)/(myMaximalPerceptionRange - myOptimalPerceptionRange))^2))) + myPersistentHeadwayError;
+        perceivedGapError = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)),2) + myPersistentHeadwayError;
+    }
+    else {
+        perceivedGapError = -INFINITY;
+    }
+    
+    const double perceivedGap = trueGap - perceivedGapError;
         return perceivedGap;   
 }
 
