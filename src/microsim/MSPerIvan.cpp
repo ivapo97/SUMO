@@ -229,46 +229,52 @@ MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
 }
 
 
+//double
+//MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
+//#ifdef DEBUG_PERCEPTION_ERRORS
+//    if (DEBUG_COND) {
+//        if (!debugLocked()) {
+//            std::cout << SIMTIME << " getPerceivedHeadway() for veh '" << myVehicle->getID() << "'\n"
+//                << "    trueGap=" << trueGap << " objID=" << objID << std::endl;
+//        }
+//    }
+//#endif
+//
+//    const double perceivedGap = trueGap + myHeadwayErrorCoefficient * myError.getState() * trueGap;
+//    const auto assumedGap = myAssumedGap.find(objID);
+//    if (assumedGap == myAssumedGap.end()
+//        || fabs(perceivedGap - assumedGap->second) > myHeadwayChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
+//
+//#ifdef DEBUG_PERCEPTION_ERRORS
+//        if (!debugLocked()) {
+//            std::cout << "    new perceived gap (=" << perceivedGap << ") differs significantly from the assumed (="
+//                << (assumedGap == myAssumedGap.end() ? "NA" : toString(assumedGap->second)) << ")" << std::endl;
+//        }
+//#endif
+//
+//        // new perceived gap differs significantly from the previous
+//        myAssumedGap[objID] = perceivedGap;
+//        return perceivedGap;
+//    }
+//    else {
+//
+//#ifdef DEBUG_PERCEPTION_ERRORS
+//        if (DEBUG_COND) {
+//            if (!debugLocked()) {
+//                std::cout << "    new perceived gap (=" << perceivedGap << ") does *not* differ significantly from the assumed (="
+//                    << (assumedGap->second) << ")" << std::endl;
+//            }
+//        }
+//#endif
+//        // new perceived gap doesn't differ significantly from the previous
+//        return myAssumedGap[objID];
+//    }
+//}
+
 double
 MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
-#ifdef DEBUG_PERCEPTION_ERRORS
-    if (DEBUG_COND) {
-        if (!debugLocked()) {
-            std::cout << SIMTIME << " getPerceivedHeadway() for veh '" << myVehicle->getID() << "'\n"
-                << "    trueGap=" << trueGap << " objID=" << objID << std::endl;
-        }
-    }
-#endif
-
-    const double perceivedGap = trueGap + myHeadwayErrorCoefficient * myError.getState() * trueGap;
-    const auto assumedGap = myAssumedGap.find(objID);
-    if (assumedGap == myAssumedGap.end()
-        || fabs(perceivedGap - assumedGap->second) > myHeadwayChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
-
-#ifdef DEBUG_PERCEPTION_ERRORS
-        if (!debugLocked()) {
-            std::cout << "    new perceived gap (=" << perceivedGap << ") differs significantly from the assumed (="
-                << (assumedGap == myAssumedGap.end() ? "NA" : toString(assumedGap->second)) << ")" << std::endl;
-        }
-#endif
-
-        // new perceived gap differs significantly from the previous
-        myAssumedGap[objID] = perceivedGap;
-        return perceivedGap;
-    }
-    else {
-
-#ifdef DEBUG_PERCEPTION_ERRORS
-        if (DEBUG_COND) {
-            if (!debugLocked()) {
-                std::cout << "    new perceived gap (=" << perceivedGap << ") does *not* differ significantly from the assumed (="
-                    << (assumedGap->second) << ")" << std::endl;
-            }
-        }
-#endif
-        // new perceived gap doesn't differ significantly from the previous
-        return myAssumedGap[objID];
-    }
+    const double perceivedGap = trueGap + myHeadwayErrorCoefficient;
+        return perceivedGap;   
 }
 
 void
