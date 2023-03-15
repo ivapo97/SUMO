@@ -83,6 +83,7 @@ double PerIvanDefaults::errorTimeScaleCoefficient = 100.0;
 double PerIvanDefaults::errorNoiseIntensityCoefficient = 0.2;
 double PerIvanDefaults::speedDifferenceErrorCoefficient = 0.15;
 double PerIvanDefaults::headwayErrorCoefficient = 0.75;
+double PerIvanDefaults::persistentHeadwayError = 0.0;
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -134,6 +135,7 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myErrorNoiseIntensityCoefficient(PerIvanDefaults::errorNoiseIntensityCoefficient),
     mySpeedDifferenceErrorCoefficient(PerIvanDefaults::speedDifferenceErrorCoefficient),
     myHeadwayErrorCoefficient(PerIvanDefaults::headwayErrorCoefficient),
+    myPersistentHeadwayError(PerIvanDefaults::persistentHeadwayError),    
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -273,7 +275,7 @@ MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
 
 double
 MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
-    const double perceivedGap = trueGap + myHeadwayErrorCoefficient;
+    const double perceivedGap = trueGap + myPersistentHeadwayError;
         return perceivedGap;   
 }
 

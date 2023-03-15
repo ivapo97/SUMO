@@ -140,7 +140,9 @@ public:
     inline double getHeadwayErrorCoefficient() const {
         return myHeadwayErrorCoefficient;
     }
-
+    inline double getPersistentHeadwayError() const {
+        return myPersistentHeadwayError;
+    }
     inline double getFreeSpeedErrorCoefficient() const {
         return myFreeSpeedErrorCoefficient;
     }
@@ -200,7 +202,9 @@ public:
     inline void setHeadwayErrorCoefficient(const double value) {
         myHeadwayErrorCoefficient = value;
     }
-
+    inline void setPersistentHeadwayError(const double value) {
+        myPersistentHeadwayError = value;
+    }    
     inline void setFreeSpeedErrorCoefficient(const double value) {
         myFreeSpeedErrorCoefficient = value;
     }
@@ -308,6 +312,9 @@ private:
     double mySpeedDifferenceErrorCoefficient;
     double myHeadwayErrorCoefficient;
     double myFreeSpeedErrorCoefficient;
+
+    /// @brief Persistent headway error
+    double myPersistentHeadwayError;
     /// @brief Thresholds above a change in the corresponding quantity is perceived.
     /// @note  In the comparison, we multiply the actual change amount by the current
     ///       gap to the object to reflect a more precise perception if the object is closer.
@@ -695,6 +702,7 @@ struct PerIvanDefaults {
     static double speedDifferenceChangePerceptionThreshold;
     static double headwayChangePerceptionThreshold;
     static double headwayErrorCoefficient;
+    static double persistentHeadwayError;
     static double freeSpeedErrorCoefficient;
     static double maximalReactionTimeFactor;
 };
