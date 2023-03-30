@@ -1154,7 +1154,7 @@ MSCFModel::applyHeadwayAndSpeedDifferencePerceptionErrors(const MSVehicle* const
     }
     else if (veh->hasPerIvan()) {
         // Obtain perceived gap and headway from the per ivan
-        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, pred);
+        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, speed, pred);
         const double perceivedSpeedDifference = veh->getPerIvan()->getPerceivedSpeedDifference(predSpeed - speed, gap, pred);
 
         gap = perceivedGap;
@@ -1213,7 +1213,7 @@ MSCFModel::applyHeadwayPerceptionError(const MSVehicle* const veh, double speed,
     else if (veh->hasPerIvan()) {
 
         // Obtain perceived gap from per ivan
-        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap);
+        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, speed);
         gap = perceivedGap;
     }
     else {

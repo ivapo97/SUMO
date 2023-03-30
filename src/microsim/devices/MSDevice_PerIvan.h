@@ -92,6 +92,12 @@ private:
     static double getOptimalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc); 
     static double getMaximalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc);
     static double getMaxHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);    
+    static double getHeadwayErrorShape(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinDistanceNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinSpeedNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getDistanceNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getSpeedNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getOptimalSpeedRange(const SUMOVehicle& v, const OptionsCont& oc);
     static double getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
@@ -132,6 +138,12 @@ private:
         double optimalPerceptionRange,
         double maximalPerceptionRange,
         double maxHeadwayError,
+        double headwayErrorShape,
+        double minDistanceNoiseHeadway,
+        double minSpeedNoiseHeadway,
+        double distanceNoiseHeadwayCoeff,
+        double speedNoiseHeadwayCoeff,
+        double optimalSpeedRange,
         double freeSpeedErrorCoefficient,
         double maximalReactionTime);
 
@@ -157,6 +169,12 @@ private:
     double myOptimalPerceptionRange;
     double myMaximalPerceptionRange;
     double myMaxHeadwayError;
+    double myHeadwayErrorShape;
+    double myMinDistanceNoiseHeadway;
+    double myMinSpeedNoiseHeadway;
+    double myDistanceNoiseHeadwayCoeff;
+    double mySpeedNoiseHeadwayCoeff;
+    double myOptimalSpeedRange;
     double myFreeSpeedErrorCoefficient;
     double myMaximalReactionTime;
     /// @}

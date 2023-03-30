@@ -58,24 +58,6 @@ SumoRNG OUProcessIV::myRNG("perivan");
 // ===========================================================================
 // Default value definitions
 // ===========================================================================
-//double TCIDefaults::myMinTaskCapability = 0.1;
-//double TCIDefaults::myMaxTaskCapability = 10.0;
-//double TCIDefaults::myMaxTaskDemand = 20.0;
-//double TCIDefaults::myMaxDifficulty = 10.0;
-//double TCIDefaults::mySubCriticalDifficultyCoefficient = 0.1;
-//double TCIDefaults::mySuperCriticalDifficultyCoefficient = 1.0;
-//double TCIDefaults::myOppositeDirectionDrivingFactor = 1.3;
-//double TCIDefaults::myHomeostasisDifficulty = 1.5;
-//double TCIDefaults::myCapabilityTimeScale = 0.5;
-//double TCIDefaults::myAccelerationErrorTimeScaleCoefficient = 1.0;
-//double TCIDefaults::myAccelerationErrorNoiseIntensityCoefficient = 1.0;
-//double TCIDefaults::myActionStepLengthCoefficient = 1.0;
-//double TCIDefaults::myMinActionStepLength = 0.0;
-//double TCIDefaults::myMaxActionStepLength = 3.0;
-//double TCIDefaults::mySpeedPerceptionErrorTimeScaleCoefficient = 1.0;
-//double TCIDefaults::mySpeedPerceptionErrorNoiseIntensityCoefficient = 1.0;
-//double TCIDefaults::myHeadwayPerceptionErrorTimeScaleCoefficient = 1.0;
-//double TCIDefaults::myHeadwayPerceptionErrorNoiseIntensityCoefficient = 1.0;
 
 double PerIvanDefaults::minAwareness = 0.1;
 double PerIvanDefaults::initialAwareness = 1.0;
@@ -87,6 +69,12 @@ double PerIvanDefaults::persistentHeadwayError = 0.0;
 double PerIvanDefaults::optimalPerceptionRange = 50.0;
 double PerIvanDefaults::maximalPerceptionRange = 150.0;
 double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is larger than persistentHeadwayError  
+double PerIvanDefaults::headwayErrorShape = 1.0;
+double PerIvanDefaults::minDistanceNoiseHeadway = 0.1;
+double PerIvanDefaults::minSpeedNoiseHeadway = 0.1;
+double PerIvanDefaults::distanceNoiseHeadwayCoeff = 0.1;
+double PerIvanDefaults::speedNoiseHeadwayCoeff = 0.1;
+double PerIvanDefaults::optimalSpeedRange = 10.0;
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -141,7 +129,13 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myPersistentHeadwayError(PerIvanDefaults::persistentHeadwayError),  
     myOptimalPerceptionRange(PerIvanDefaults::optimalPerceptionRange),
     myMaximalPerceptionRange(PerIvanDefaults::maximalPerceptionRange),
-    myMaxHeadwayError(PerIvanDefaults::maxHeadwayError),    
+    myMaxHeadwayError(PerIvanDefaults::maxHeadwayError),  
+    myHeadwayErrorShape(PerIvanDefaults::headwayErrorShape),
+    myMinDistanceNoiseHeadway(PerIvanDefaults::minDistanceNoiseHeadway),
+    myMinSpeedNoiseHeadway(PerIvanDefaults::minSpeedNoiseHeadway),
+    myDistanceNoiseHeadwayCoeff(PerIvanDefaults::distanceNoiseHeadwayCoeff),
+    mySpeedNoiseHeadwayCoeff(PerIvanDefaults::speedNoiseHeadwayCoeff),
+    myOptimalSpeedRange(PerIvanDefaults::optimalSpeedRange),
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -237,65 +231,40 @@ MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
 }
 
 
-//double
-//MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
-//#ifdef DEBUG_PERCEPTION_ERRORS
-//    if (DEBUG_COND) {
-//        if (!debugLocked()) {
-//            std::cout << SIMTIME << " getPerceivedHeadway() for veh '" << myVehicle->getID() << "'\n"
-//                << "    trueGap=" << trueGap << " objID=" << objID << std::endl;
-//        }
-//    }
-//#endif
-//
-//    const double perceivedGap = trueGap + myHeadwayErrorCoefficient * myError.getState() * trueGap;
-//    const auto assumedGap = myAssumedGap.find(objID);
-//    if (assumedGap == myAssumedGap.end()
-//        || fabs(perceivedGap - assumedGap->second) > myHeadwayChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
-//
-//#ifdef DEBUG_PERCEPTION_ERRORS
-//        if (!debugLocked()) {
-//            std::cout << "    new perceived gap (=" << perceivedGap << ") differs significantly from the assumed (="
-//                << (assumedGap == myAssumedGap.end() ? "NA" : toString(assumedGap->second)) << ")" << std::endl;
-//        }
-//#endif
-//
-//        // new perceived gap differs significantly from the previous
-//        myAssumedGap[objID] = perceivedGap;
-//        return perceivedGap;
-//    }
-//    else {
-//
-//#ifdef DEBUG_PERCEPTION_ERRORS
-//        if (DEBUG_COND) {
-//            if (!debugLocked()) {
-//                std::cout << "    new perceived gap (=" << perceivedGap << ") does *not* differ significantly from the assumed (="
-//                    << (assumedGap->second) << ")" << std::endl;
-//            }
-//        }
-//#endif
-//        // new perceived gap doesn't differ significantly from the previous
-//        return myAssumedGap[objID];
-//    }
-//}
-
 double
-MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const void* objID) {
-    //ellipse error
-    double perceivedGapError;
-    if (trueGap<myOptimalPerceptionRange) {
-        perceivedGapError = myPersistentHeadwayError;
+MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double trueSpeedDifference, const void* objID) {
+    double headwayAccuracy = 50 * myMaximalPerceptionRange;
+
+    if (trueGap<=myOptimalPerceptionRange) {
+        headwayAccuracy = myPersistentHeadwayError;
     }
-    else if (trueGap<myMaximalPerceptionRange) {
-        //perceivedGapError = ((myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - ((trueGap - myMaxHeadwayError)/(myMaximalPerceptionRange - myOptimalPerceptionRange))^2))) + myPersistentHeadwayError;
-        perceivedGapError = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)),2) + myPersistentHeadwayError;
+    else if (trueGap<=myMaximalPerceptionRange) {
+        if (myHeadwayErrorShape == 1.0) { //linear
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * ((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentHeadwayError;
+        }
+        else if (myHeadwayErrorShape == 2.0) { //quadratic
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentHeadwayError;
+        }
+        else if (myHeadwayErrorShape == 3.0) { //ellipse
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentHeadwayError;
+        }
     }
-    else {
-        perceivedGapError = -INFINITY;
+
+    double headwayDistancePrecision = myMinDistanceNoiseHeadway;
+    double headwaySpeedPrecision = myMinSpeedNoiseHeadway;
+    // distance precision (noise)
+    if (trueGap > myOptimalPerceptionRange) {
+        headwayDistancePrecision = myMinDistanceNoiseHeadway + myDistanceNoiseHeadwayCoeff*(trueGap - myOptimalPerceptionRange);
     }
-    
-    const double perceivedGap = trueGap - perceivedGapError;
-        return perceivedGap;   
+    // speed precision (noise)
+    if (trueSpeedDifference > myOptimalSpeedRange) {
+        headwaySpeedPrecision = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (trueSpeedDifference - myOptimalSpeedRange);
+    }
+   
+    double headwayPrecision = headwayDistancePrecision + headwaySpeedPrecision;
+   
+    const double perceivedHeadway = trueGap + headwayAccuracy + myError.getState()*headwayPrecision;
+        return perceivedHeadway;
 }
 
 void
@@ -318,28 +287,13 @@ MSSimplePerIvan::updateAssumedGaps() {
 
 double
 MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const void* objID) {
-#ifdef DEBUG_PERCEPTION_ERRORS
-    if (DEBUG_COND) {
-        if (!debugLocked()) {
-            std::cout << SIMTIME << " getPerceivedSpeedDifference() for veh '" << myVehicle->getID() << "'\n"
-                << "    trueGap=" << trueGap << " trueSpeedDifference=" << trueSpeedDifference << " objID=" << objID << std::endl;
-        }
-    }
-#endif
+
     const double perceivedSpeedDifference = trueSpeedDifference + mySpeedDifferenceErrorCoefficient * myError.getState() * trueGap;
     const auto lastPerceivedSpeedDifference = myLastPerceivedSpeedDifference.find(objID);
     if (lastPerceivedSpeedDifference == myLastPerceivedSpeedDifference.end()
         || fabs(perceivedSpeedDifference - lastPerceivedSpeedDifference->second) > mySpeedDifferenceChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
 
-#ifdef DEBUG_PERCEPTION_ERRORS
-        if (DEBUG_COND) {
-            if (!debugLocked()) {
-                std::cout << "    new perceived speed difference (=" << perceivedSpeedDifference << ") differs significantly from the last perceived (="
-                    << (lastPerceivedSpeedDifference == myLastPerceivedSpeedDifference.end() ? "NA" : toString(lastPerceivedSpeedDifference->second)) << ")"
-                    << std::endl;
-            }
-        }
-#endif
+
 
         // new perceived speed difference differs significantly from the previous
         myLastPerceivedSpeedDifference[objID] = perceivedSpeedDifference;

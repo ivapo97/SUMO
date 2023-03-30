@@ -79,7 +79,19 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.doRegister("device.perivan.maximalPerceptionRange", new Option_Float(PerIvanDefaults::maximalPerceptionRange));
     oc.addDescription("device.perivan.maximalPerceptionRange", TL("Per Ivan Device"), TL("Max. headway range."));
     oc.doRegister("device.perivan.maxHeadwayError", new Option_Float(PerIvanDefaults::maxHeadwayError));
-    oc.addDescription("device.perivan.maxHeadwayError", TL("Per Ivan Device"), TL("Error at max. headway range."));    
+    oc.addDescription("device.perivan.maxHeadwayError", TL("Per Ivan Device"), TL("Error at max. headway range."));  
+    oc.doRegister("device.perivan.headwayErrorShape", new Option_Float(PerIvanDefaults::headwayErrorShape));
+    oc.addDescription("device.perivan.headwayErrorShape", TL("Per Ivan Device"), TL("Shape of headway error function - '1: linear','2: quadratic', or '3 :ellipse'")); 
+    oc.doRegister("device.perivan.minDistanceNoiseHeadway", new Option_Float(PerIvanDefaults::minDistanceNoiseHeadway));
+    oc.addDescription("device.perivan.minDistanceNoiseHeadway", TL("Per Ivan Device"), TL("Min distance noise on headway."));
+    oc.doRegister("device.perivan.minSpeedNoiseHeadway", new Option_Float(PerIvanDefaults::minSpeedNoiseHeadway));
+    oc.addDescription("device.perivan.minSpeedNoiseHeadway", TL("Per Ivan Device"), TL("Min speed noise on headway."));
+    oc.doRegister("device.perivan.distanceNoiseHeadwayCoeff", new Option_Float(PerIvanDefaults::distanceNoiseHeadwayCoeff));
+    oc.addDescription("device.perivan.distanceNoiseHeadwayCoeff", TL("Per Ivan Device"), TL("Distance noise rate coefficient on headway."));    
+    oc.doRegister("device.perivan.speedNoiseHeadwayCoeff", new Option_Float(PerIvanDefaults::speedNoiseHeadwayCoeff));
+    oc.addDescription("device.perivan.speedNoiseHeadwayCoeff", TL("Per Ivan Device"), TL("Speed noise rate coefficient on headway."));
+    oc.doRegister("device.perivan.optimalSpeedRange", new Option_Float(PerIvanDefaults::optimalSpeedRange));
+    oc.addDescription("device.perivan.optimalSpeedRange", TL("Per Ivan Device"), TL("Speed range without increase in noise."));
     oc.doRegister("device.perivan.freeSpeedErrorCoefficient", new Option_Float(PerIvanDefaults::freeSpeedErrorCoefficient));
     oc.addDescription("device.perivan.freeSpeedErrorCoefficient", TL("Per Ivan Device"), TL("General scaling coefficient for applying the error to the vehicle's own speed when driving without a leader (error also scales with own speed)."));
     oc.doRegister("device.perivan.speedDifferenceChangePerceptionThreshold", new Option_Float(PerIvanDefaults::speedDifferenceChangePerceptionThreshold));
@@ -96,7 +108,7 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
 void
 MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>& into) {
     OptionsCont& oc = OptionsCont::getOptions();
-    ///@todo: what is this about?
+    ///@todo: what is this about? Ivan
     // ToC device implies this device 
     if (equippedByDefaultAssignmentOptions(oc, "perivan", v, false) || equippedByDefaultAssignmentOptions(oc, "toc", v, false)) {
         const double minAwareness = getMinAwareness(v, oc);
@@ -111,6 +123,12 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
         const double optimalPerceptionRange = getOptimalPerceptionRange(v, oc);
         const double maximalPerceptionRange = getMaximalPerceptionRange(v, oc);
         const double maxHeadwayError = getMaxHeadwayError(v, oc);
+        const double headwayErrorShape = getHeadwayErrorShape(v, oc);
+        const double minDistanceNoiseHeadway = getMinDistanceNoiseHeadway(v,oc);
+        const double minSpeedNoiseHeadway = getMinSpeedNoiseHeadway(v,oc);
+        const double distanceNoiseHeadwayCoeff = getDistanceNoiseHeadwayCoeff(v,oc);
+        const double speedNoiseHeadwayCoeff = getSpeedNoiseHeadwayCoeff(v,oc);
+        const double optimalSpeedRange = getOptimalSpeedRange(v, oc);
         const double freeSpeedErrorCoefficient = getFreeSpeedErrorCoefficient(v, oc);
         const double maximalReactionTime = getMaximalReactionTime(v, oc);
         // build the device
@@ -127,6 +145,12 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
             optimalPerceptionRange,
             maximalPerceptionRange,
             maxHeadwayError,
+            headwayErrorShape,
+            minDistanceNoiseHeadway,
+            minSpeedNoiseHeadway,
+            distanceNoiseHeadwayCoeff,
+            speedNoiseHeadwayCoeff,
+            optimalSpeedRange,
             freeSpeedErrorCoefficient,
             maximalReactionTime);
         into.push_back(device);
@@ -183,6 +207,32 @@ MSDevice_PerIvan::getMaxHeadwayError(const SUMOVehicle& v, const OptionsCont& oc
     return getFloatParam(v, oc, "perivan.maxHeadwayError", PerIvanDefaults::maxHeadwayError, false);
 }
 double
+MSDevice_PerIvan::getHeadwayErrorShape(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.headwayErrorShape", PerIvanDefaults::headwayErrorShape, false);
+}
+
+double
+MSDevice_PerIvan::getMinDistanceNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.minDistanceNoiseHeadway", PerIvanDefaults::minDistanceNoiseHeadway, false);
+}
+double
+MSDevice_PerIvan::getMinSpeedNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.minSpeedNoiseHeadway", PerIvanDefaults::minSpeedNoiseHeadway, false);
+}
+double
+MSDevice_PerIvan::getDistanceNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.distanceNoiseHeadwayCoeff", PerIvanDefaults::distanceNoiseHeadwayCoeff, false);
+}
+double
+MSDevice_PerIvan::getSpeedNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.speedNoiseHeadwayCoeff", PerIvanDefaults::speedNoiseHeadwayCoeff, false);
+}
+double
+MSDevice_PerIvan::getOptimalSpeedRange(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.optimalSpeedRange", PerIvanDefaults::optimalSpeedRange, false);
+}
+
+double
 MSDevice_PerIvan::getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.freeSpeedErrorCoefficient", PerIvanDefaults::freeSpeedErrorCoefficient, false);
 }
@@ -208,6 +258,12 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     double optimalPerceptionRange,
     double maximalPerceptionRange,
     double maxHeadwayError,
+    double headwayErrorShape,
+    double minDistanceNoiseHeadway,
+    double minSpeedNoiseHeadway,
+    double distanceNoiseHeadwayCoeff,
+    double speedNoiseHeadwayCoeff,
+    double optimalSpeedRange,
     double freeSpeedErrorCoefficient,
     double maximalReactionTime) :
     MSVehicleDevice(holder, id),
@@ -223,6 +279,12 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     myOptimalPerceptionRange(optimalPerceptionRange),
     myMaximalPerceptionRange(maximalPerceptionRange),
     myMaxHeadwayError(maxHeadwayError),
+    myHeadwayErrorShape(headwayErrorShape),
+    myMinDistanceNoiseHeadway(minDistanceNoiseHeadway),
+    myMinSpeedNoiseHeadway(minSpeedNoiseHeadway),
+    myDistanceNoiseHeadwayCoeff(distanceNoiseHeadwayCoeff),
+    mySpeedNoiseHeadwayCoeff(speedNoiseHeadwayCoeff),
+    myOptimalSpeedRange(optimalSpeedRange),
     myFreeSpeedErrorCoefficient(freeSpeedErrorCoefficient),
     myMaximalReactionTime(maximalReactionTime) {
     // Take care! Holder is currently being constructed. Cast occurs before completion.
@@ -258,6 +320,12 @@ MSDevice_PerIvan::initPerIvan() {
     myPerIvan->setOptimalPerceptionRange(myOptimalPerceptionRange);
     myPerIvan->setMaximalPerceptionRange(myMaximalPerceptionRange);   
     myPerIvan->setMaxHeadwayError(myMaxHeadwayError);
+    myPerIvan->setHeadwayErrorShape(myHeadwayErrorShape);
+    myPerIvan->setMinDistanceNoiseHeadway(myMinDistanceNoiseHeadway);
+    myPerIvan->setMinSpeedNoiseHeadway(myMinSpeedNoiseHeadway);
+    myPerIvan->setDistanceNoiseHeadwayCoeff(myDistanceNoiseHeadwayCoeff);
+    myPerIvan->setSpeedNoiseHeadwayCoeff(mySpeedNoiseHeadwayCoeff);
+    myPerIvan->setOptimalSpeedRange(myOptimalSpeedRange);
     myPerIvan->setFreeSpeedErrorCoefficient(myFreeSpeedErrorCoefficient);
     myPerIvan->setSpeedDifferenceChangePerceptionThreshold(mySpeedDifferenceChangePerceptionThreshold);
     myPerIvan->setHeadwayChangePerceptionThreshold(myHeadwayChangePerceptionThreshold);
@@ -318,7 +386,25 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
     } 
     else if (key == "maxHeadwayError") {
         return toString(myPerIvan->getMaxHeadwayError());
-    }    
+    }
+    else if (key == "headwayErrorShape") {
+        return toString(myPerIvan->getHeadwayErrorShape());
+    } 
+    else if (key == "minDistanceNoiseHeadway") {
+        return toString(myPerIvan->getMinDistanceNoiseHeadway());
+    }
+    else if (key == "minSpeedNoiseHeadway") {
+        return toString(myPerIvan->getMinSpeedNoiseHeadway());
+    }
+    else if (key == "distanceNoiseHeadwayCoeff") {
+        return toString(myPerIvan->getDistanceNoiseHeadwayCoeff());
+    }
+    else if (key == "speedNoiseHeadwayCoeff") {
+        return toString(myPerIvan->getSpeedNoiseHeadwayCoeff());
+    }
+    else if (key == "optimalSpeedRange") {
+        return toString(myPerIvan->getOptimalSpeedRange());
+    }
     else if (key == "speedDifferenceChangePerceptionThreshold") {
         return toString(myPerIvan->getSpeedDifferenceChangePerceptionThreshold());
     }
@@ -384,7 +470,25 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
     }
     else if (key == "maxHeadwayError") {
         myPerIvan->setMaxHeadwayError(StringUtils::toDouble(value));
-    }     
+    }
+    else if (key == "headwayErrorShape") {
+        myPerIvan->setHeadwayErrorShape(StringUtils::toDouble(value));
+    }
+    else if (key == "minDistanceNoiseHeadway") {
+        myPerIvan->setMinDistanceNoiseHeadway(StringUtils::toDouble(value));
+    }
+    else if (key == "minSpeedNoiseHeadway") {
+        myPerIvan->setMinSpeedNoiseHeadway(StringUtils::toDouble(value));
+    }
+    else if (key == "distanceNoiseHeadwayCoeff") {
+        myPerIvan->setDistanceNoiseHeadwayCoeff(StringUtils::toDouble(value));
+    }
+    else if (key == "speedNoiseHeadwayCoeff") {
+        myPerIvan->setSpeedNoiseHeadwayCoeff(StringUtils::toDouble(value));
+    }
+    else if (key == "optimalSpeedRange") {
+        myPerIvan->setOptimalSpeedRange(StringUtils::toDouble(value));
+    }
     else if (key == "freeSpeedErrorCoefficient") {
         myPerIvan->setFreeSpeedErrorCoefficient(StringUtils::toDouble(value));
     }
