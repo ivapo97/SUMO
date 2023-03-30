@@ -232,7 +232,7 @@ MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
 
 
 double
-MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double trueSpeedDifference, const void* objID) {
+MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double speed, const void* objID) {
     double headwayAccuracy = 50 * myMaximalPerceptionRange;
 
     if (trueGap<=myOptimalPerceptionRange) {
@@ -257,8 +257,8 @@ MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double trueSpee
         headwayDistancePrecision = myMinDistanceNoiseHeadway + myDistanceNoiseHeadwayCoeff*(trueGap - myOptimalPerceptionRange);
     }
     // speed precision (noise)
-    if (trueSpeedDifference > myOptimalSpeedRange) {
-        headwaySpeedPrecision = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (trueSpeedDifference - myOptimalSpeedRange);
+    if (speed > myOptimalSpeedRange) {
+        headwaySpeedPrecision = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (speed - myOptimalSpeedRange);
     }
    
     double headwayPrecision = headwayDistancePrecision + headwaySpeedPrecision;
