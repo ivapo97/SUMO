@@ -1155,7 +1155,7 @@ MSCFModel::applyHeadwayAndSpeedDifferencePerceptionErrors(const MSVehicle* const
     else if (veh->hasPerIvan()) {
         // Obtain perceived gap and headway from the per ivan
         const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, speed, pred);
-        const double perceivedSpeedDifference = veh->getPerIvan()->getPerceivedSpeedDifference(predSpeed - speed, gap, pred);
+        const double perceivedSpeedDifference = veh->getPerIvan()->getPerceivedSpeedDifference(predSpeed - speed, gap, speed, pred);
 
         gap = perceivedGap;
         predSpeed = speed + perceivedSpeedDifference;

@@ -170,6 +170,27 @@ public:
     inline double getOptimalSpeedRange() const {
         return myOptimalSpeedRange;
     }
+    inline double getPersistentDeltaVError() const {
+        return myPersistentDeltaVError;
+    }
+    inline double getMaxDeltaVError() const {
+        return myMaxDeltaVError;
+    }
+    inline double getDeltaVErrorShape() const {
+        return myDeltaVErrorShape;
+    }
+    inline double getMinDistanceNoiseDeltaV() const {
+        return myMinDistanceNoiseDeltaV;
+    }
+    inline double getMinSpeedNoiseDeltaV() const {
+        return myMinSpeedNoiseDeltaV;
+    }
+    inline double getDistanceNoiseDeltaVCoeff() const {
+        return myDistanceNoiseDeltaVCoeff;
+    }
+    inline double getSpeedNoiseDeltaVCoeff() const {
+        return mySpeedNoiseDeltaVCoeff;
+    }
     inline double getFreeSpeedErrorCoefficient() const {
         return myFreeSpeedErrorCoefficient;
     }
@@ -259,6 +280,27 @@ public:
     inline void setOptimalSpeedRange(const double value) {
         myOptimalSpeedRange = value;
     }
+    inline void setPersistentDeltaVError(const double value) {
+        myPersistentDeltaVError = value;
+    }
+    inline void setMaxDeltaVError(const double value) {
+        myMaxDeltaVError = value;
+    }
+    inline void setDeltaVErrorShape(const double value) {
+        myDeltaVErrorShape = value;
+    }
+    inline void setMinDistanceNoiseDeltaV(const double value) {
+        myMinDistanceNoiseDeltaV = value;
+    }
+    inline void setMinSpeedNoiseDeltaV(const double value) {
+        myMinSpeedNoiseDeltaV = value;
+    }
+    inline void setDistanceNoiseDeltaVCoeff(const double value) {
+        myDistanceNoiseDeltaVCoeff = value;
+    }
+    inline void setSpeedNoiseDeltaVCoeff(const double value) {
+        mySpeedNoiseDeltaVCoeff = value;
+    }
     inline void setFreeSpeedErrorCoefficient(const double value) {
         myFreeSpeedErrorCoefficient = value;
     }
@@ -315,7 +357,7 @@ public:
     ///        differs sufficiently from the previously perceived to be actually perceived. If so, it sets the
     ///        flag myReactionFlag[objID]=true, which should be checked just after the call to this method because
     ///        it will be overwritten by subsequent calls.
-    double getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const void* objID = nullptr);
+    double getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const double speed, const void* objID = nullptr);
     /// @see myHeadwayPerceptionError
     double getPerceivedHeadway(const double trueGap, const double speed, const void* objID = nullptr);
     /// @}
@@ -365,11 +407,11 @@ private:
 
     /// @brief Persistent headway error
     double myPersistentHeadwayError;
-    /// @brief Headway range without increase in errors
+    /// @brief Perception range without increase in errors
     double myOptimalPerceptionRange;
-    /// @brief Max. headway range
+    /// @brief Max. perception range
     double myMaximalPerceptionRange;
-    /// @brief Error at max. headway range
+    /// @brief Headway error at max. range
     double myMaxHeadwayError;
     /// @brief Headway error function shape    
     double myHeadwayErrorShape;
@@ -383,6 +425,20 @@ private:
     double mySpeedNoiseHeadwayCoeff;
     /// @brief Speed range without increase in errors
     double myOptimalSpeedRange;
+    /// @brief Persistent deltaV error
+    double myPersistentDeltaVError;
+    /// @brief DeltaV error at max. range
+    double myMaxDeltaVError;
+    /// @brief Delta V error function shape
+    double myDeltaVErrorShape;
+    /// @brief Min. distance noise on deltaV
+    double myMinDistanceNoiseDeltaV;
+    /// @brief Min. speed noise on deltaV
+    double myMinSpeedNoiseDeltaV;
+    /// @brief Distance noise rate deltaV coefficient
+    double myDistanceNoiseDeltaVCoeff;
+    /// @brief Speed noise rate deltaV coefficient
+    double mySpeedNoiseDeltaVCoeff;
 
     /// @brief Thresholds above a change in the corresponding quantity is perceived.
     /// @note  In the comparison, we multiply the actual change amount by the current
@@ -441,6 +497,13 @@ struct PerIvanDefaults {
     static double distanceNoiseHeadwayCoeff;
     static double speedNoiseHeadwayCoeff;
     static double optimalSpeedRange;
+    static double persistentDeltaVError;
+    static double maxDeltaVError;
+    static double deltaVErrorShape;
+    static double minDistanceNoiseDeltaV;
+    static double minSpeedNoiseDeltaV;
+    static double distanceNoiseDeltaVCoeff;
+    static double speedNoiseDeltaVCoeff;
     static double freeSpeedErrorCoefficient;
     static double maximalReactionTimeFactor;
 };

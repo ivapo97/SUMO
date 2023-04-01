@@ -98,6 +98,13 @@ private:
     static double getDistanceNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
     static double getSpeedNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
     static double getOptimalSpeedRange(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getPersistentDeltaVError(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMaxDeltaVError(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getDeltaVErrorShape(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinDistanceNoiseDeltaV(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinSpeedNoiseDeltaV(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getDistanceNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getSpeedNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
     static double getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
@@ -144,6 +151,13 @@ private:
         double distanceNoiseHeadwayCoeff,
         double speedNoiseHeadwayCoeff,
         double optimalSpeedRange,
+        double persistentDeltaVError,
+        double maxDeltaVError,
+        double deltaVErrorShape,
+        double minDistanceNoiseDeltaV,
+        double minSpeedNoiseDeltaV,
+        double distanceNoiseDeltaVCoeff,
+        double speedNoiseDeltaVCoeff,
         double freeSpeedErrorCoefficient,
         double maximalReactionTime);
 
@@ -175,6 +189,13 @@ private:
     double myDistanceNoiseHeadwayCoeff;
     double mySpeedNoiseHeadwayCoeff;
     double myOptimalSpeedRange;
+    double myPersistentDeltaVError;
+    double myMaxDeltaVError;
+    double myDeltaVErrorShape;
+    double myMinDistanceNoiseDeltaV;
+    double myMinSpeedNoiseDeltaV;
+    double myDistanceNoiseDeltaVCoeff;
+    double mySpeedNoiseDeltaVCoeff;
     double myFreeSpeedErrorCoefficient;
     double myMaximalReactionTime;
     /// @}

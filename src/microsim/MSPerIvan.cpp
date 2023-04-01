@@ -72,9 +72,16 @@ double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is la
 double PerIvanDefaults::headwayErrorShape = 1.0;
 double PerIvanDefaults::minDistanceNoiseHeadway = 0.1;
 double PerIvanDefaults::minSpeedNoiseHeadway = 0.1;
-double PerIvanDefaults::distanceNoiseHeadwayCoeff = 0.1;
-double PerIvanDefaults::speedNoiseHeadwayCoeff = 0.1;
+double PerIvanDefaults::distanceNoiseHeadwayCoeff = 0.001;
+double PerIvanDefaults::speedNoiseHeadwayCoeff = 0.001;
 double PerIvanDefaults::optimalSpeedRange = 10.0;
+double PerIvanDefaults::persistentDeltaVError = 0.1;
+double PerIvanDefaults::maxDeltaVError = 0.5;
+double PerIvanDefaults::deltaVErrorShape = 1.0;
+double PerIvanDefaults::minDistanceNoiseDeltaV = 0.1;
+double PerIvanDefaults::minSpeedNoiseDeltaV = 0.1;
+double PerIvanDefaults::distanceNoiseDeltaVCoeff = 0.001;
+double PerIvanDefaults::speedNoiseDeltaVCoeff = 0.001;
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -136,6 +143,13 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myDistanceNoiseHeadwayCoeff(PerIvanDefaults::distanceNoiseHeadwayCoeff),
     mySpeedNoiseHeadwayCoeff(PerIvanDefaults::speedNoiseHeadwayCoeff),
     myOptimalSpeedRange(PerIvanDefaults::optimalSpeedRange),
+    myPersistentDeltaVError(PerIvanDefaults::persistentDeltaVError),
+    myMaxDeltaVError(PerIvanDefaults::maxDeltaVError),
+    myDeltaVErrorShape(PerIvanDefaults::deltaVErrorShape),
+    myMinDistanceNoiseDeltaV(PerIvanDefaults::minDistanceNoiseDeltaV),
+    myMinSpeedNoiseDeltaV(PerIvanDefaults::minSpeedNoiseDeltaV),
+    myDistanceNoiseDeltaVCoeff(PerIvanDefaults::distanceNoiseDeltaVCoeff),
+    mySpeedNoiseDeltaVCoeff(PerIvanDefaults::speedNoiseDeltaVCoeff),
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -286,29 +300,55 @@ MSSimplePerIvan::updateAssumedGaps() {
 }
 
 double
-MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const void* objID) {
+MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const double speed, const void* objID) {
+    double deltaVAccuracy = 0;
 
-    const double perceivedSpeedDifference = trueSpeedDifference + mySpeedDifferenceErrorCoefficient * myError.getState() * trueGap;
-    const auto lastPerceivedSpeedDifference = myLastPerceivedSpeedDifference.find(objID);
-    if (lastPerceivedSpeedDifference == myLastPerceivedSpeedDifference.end()
-        || fabs(perceivedSpeedDifference - lastPerceivedSpeedDifference->second) > mySpeedDifferenceChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
-
-
-
-        // new perceived speed difference differs significantly from the previous
-        myLastPerceivedSpeedDifference[objID] = perceivedSpeedDifference;
-        return perceivedSpeedDifference;
+    if (trueGap <= myOptimalPerceptionRange) {
+        deltaVAccuracy = myPersistentDeltaVError;
     }
-    else {
-#ifdef DEBUG_PERCEPTION_ERRORS
-        if (!debugLocked()) {
-            std::cout << "    new perceived speed difference (=" << perceivedSpeedDifference << ") does *not* differ significantly from the last perceived (="
-                << (lastPerceivedSpeedDifference->second) << ")" << std::endl;
+    else if (trueGap <= myMaximalPerceptionRange) {
+        if (myDeltaVErrorShape == 1.0) { //linear
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * ((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentDeltaVError;
         }
-#endif
-        // new perceived speed difference doesn't differ significantly from the previous
-        return lastPerceivedSpeedDifference->second;
+        else if (myDeltaVErrorShape == 2.0) { //quadratic
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * pow(((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentDeltaVError;
+        }
+        else if (myDeltaVErrorShape == 3.0) { //ellipse
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * (1 - sqrt(1 - pow(((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentDeltaVError;
+        }
     }
+
+    double deltaVDistancePrecision = myMinDistanceNoiseDeltaV;
+    double deltaVSpeedPrecision = myMinSpeedNoiseDeltaV;
+    // distance precision (noise)
+    if (trueGap > myOptimalPerceptionRange) {
+        deltaVDistancePrecision = myMinDistanceNoiseDeltaV + myDistanceNoiseDeltaVCoeff * (trueGap - myOptimalPerceptionRange);
+    }
+    // speed precision (noise)
+    if (speed > myOptimalSpeedRange) {
+        deltaVSpeedPrecision = myMinSpeedNoiseDeltaV + mySpeedNoiseDeltaVCoeff * (speed - myOptimalSpeedRange);
+    }
+
+    double deltaVPrecision = deltaVDistancePrecision + deltaVSpeedPrecision;
+
+    const double perceivedDeltaV = trueSpeedDifference + deltaVAccuracy + myError.getState() * deltaVPrecision;
+    return perceivedDeltaV;
+
+    //const double perceivedSpeedDifference = trueSpeedDifference + mySpeedDifferenceErrorCoefficient * myError.getState() * trueGap;
+    //const auto lastPerceivedSpeedDifference = myLastPerceivedSpeedDifference.find(objID);
+    //if (lastPerceivedSpeedDifference == myLastPerceivedSpeedDifference.end()
+    //    || fabs(perceivedSpeedDifference - lastPerceivedSpeedDifference->second) > mySpeedDifferenceChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
+
+
+
+    //    // new perceived speed difference differs significantly from the previous
+    //    myLastPerceivedSpeedDifference[objID] = perceivedSpeedDifference;
+    //    return perceivedSpeedDifference;
+    //}
+    //else {
+    //    // new perceived speed difference doesn't differ significantly from the previous
+    //    return lastPerceivedSpeedDifference->second;
+    //}
 }
 
 
