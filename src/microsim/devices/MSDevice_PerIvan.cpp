@@ -106,6 +106,8 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.addDescription("device.perivan.distanceNoiseDeltaVCoeff", TL("Per Ivan Device"), TL("Distance noise rate coefficient on deltaV."));
     oc.doRegister("device.perivan.speedNoiseDeltaVCoeff", new Option_Float(PerIvanDefaults::speedNoiseDeltaVCoeff));
     oc.addDescription("device.perivan.speedNoiseDeltaVCoeff", TL("Per Ivan Device"), TL("Speed noise rate coefficient on deltaV."));
+    oc.doRegister("device.perivan.param1", new Option_Float(PerIvanDefaults::param1));
+    oc.addDescription("device.perivan.param1", TL("Per Ivan Device"), TL("calibration parameter 1 - scale precision."));
     oc.doRegister("device.perivan.freeSpeedErrorCoefficient", new Option_Float(PerIvanDefaults::freeSpeedErrorCoefficient));
     oc.addDescription("device.perivan.freeSpeedErrorCoefficient", TL("Per Ivan Device"), TL("General scaling coefficient for applying the error to the vehicle's own speed when driving without a leader (error also scales with own speed)."));
     oc.doRegister("device.perivan.speedDifferenceChangePerceptionThreshold", new Option_Float(PerIvanDefaults::speedDifferenceChangePerceptionThreshold));
@@ -150,6 +152,7 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
         const double minSpeedNoiseDeltaV = getMinSpeedNoiseDeltaV(v, oc);
         const double distanceNoiseDeltaVCoeff = getDistanceNoiseDeltaVCoeff(v, oc);
         const double speedNoiseDeltaVCoeff = getSpeedNoiseDeltaVCoeff(v, oc);
+        const double param1 = getParam1(v, oc);
         const double freeSpeedErrorCoefficient = getFreeSpeedErrorCoefficient(v, oc);
         const double maximalReactionTime = getMaximalReactionTime(v, oc);
         // build the device
@@ -179,6 +182,7 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
             minSpeedNoiseDeltaV,
             distanceNoiseDeltaVCoeff,
             speedNoiseDeltaVCoeff,
+            param1,
             freeSpeedErrorCoefficient,
             maximalReactionTime);
         into.push_back(device);
@@ -288,6 +292,10 @@ MSDevice_PerIvan::getSpeedNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCo
     return getFloatParam(v, oc, "perivan.speedNoiseDeltaVCoeff", PerIvanDefaults::speedNoiseDeltaVCoeff, false);
 }
 double
+MSDevice_PerIvan::getParam1(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.param1", PerIvanDefaults::param1, false);
+}
+double
 MSDevice_PerIvan::getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.freeSpeedErrorCoefficient", PerIvanDefaults::freeSpeedErrorCoefficient, false);
 }
@@ -326,6 +334,7 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     double minSpeedNoiseDeltaV,
     double distanceNoiseDeltaVCoeff,
     double speedNoiseDeltaVCoeff,
+    double param1,
     double freeSpeedErrorCoefficient,
     double maximalReactionTime) :
     MSVehicleDevice(holder, id),
@@ -354,6 +363,7 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     myMinSpeedNoiseDeltaV(minSpeedNoiseDeltaV),
     myDistanceNoiseDeltaVCoeff(distanceNoiseDeltaVCoeff),
     mySpeedNoiseDeltaVCoeff(speedNoiseDeltaVCoeff),
+    myParam1(param1),
     myFreeSpeedErrorCoefficient(freeSpeedErrorCoefficient),
     myMaximalReactionTime(maximalReactionTime) {
     // Take care! Holder is currently being constructed. Cast occurs before completion.
@@ -402,6 +412,7 @@ MSDevice_PerIvan::initPerIvan() {
     myPerIvan->setMinSpeedNoiseDeltaV(myMinSpeedNoiseDeltaV);
     myPerIvan->setDistanceNoiseDeltaVCoeff(myDistanceNoiseDeltaVCoeff);
     myPerIvan->setSpeedNoiseDeltaVCoeff(mySpeedNoiseDeltaVCoeff);
+    myPerIvan->setParam1(myParam1);
     myPerIvan->setFreeSpeedErrorCoefficient(myFreeSpeedErrorCoefficient);
     myPerIvan->setSpeedDifferenceChangePerceptionThreshold(mySpeedDifferenceChangePerceptionThreshold);
     myPerIvan->setHeadwayChangePerceptionThreshold(myHeadwayChangePerceptionThreshold);
@@ -501,6 +512,9 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
     }
     else if (key == "speedNoiseDeltaVCoeff") {
         return toString(myPerIvan->getSpeedNoiseDeltaVCoeff());
+    }
+    else if (key == "param1") {
+        return toString(myPerIvan->getParam1());
     }
     else if (key == "speedDifferenceChangePerceptionThreshold") {
         return toString(myPerIvan->getSpeedDifferenceChangePerceptionThreshold());
@@ -606,6 +620,9 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
     }
     else if (key == "speedNoiseDeltaVCoeff") {
         myPerIvan->setSpeedNoiseDeltaVCoeff(StringUtils::toDouble(value));
+    }
+    else if (key == "param1") {
+        myPerIvan->setParam1(StringUtils::toDouble(value));
     }
     else if (key == "freeSpeedErrorCoefficient") {
         myPerIvan->setFreeSpeedErrorCoefficient(StringUtils::toDouble(value));

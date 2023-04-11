@@ -105,6 +105,7 @@ private:
     static double getMinSpeedNoiseDeltaV(const SUMOVehicle& v, const OptionsCont& oc);
     static double getDistanceNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
     static double getSpeedNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getParam1(const SUMOVehicle& v, const OptionsCont& oc);
     static double getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
@@ -158,6 +159,7 @@ private:
         double minSpeedNoiseDeltaV,
         double distanceNoiseDeltaVCoeff,
         double speedNoiseDeltaVCoeff,
+        double param1,
         double freeSpeedErrorCoefficient,
         double maximalReactionTime);
 
@@ -196,6 +198,7 @@ private:
     double myMinSpeedNoiseDeltaV;
     double myDistanceNoiseDeltaVCoeff;
     double mySpeedNoiseDeltaVCoeff;
+    double myParam1;
     double myFreeSpeedErrorCoefficient;
     double myMaximalReactionTime;
     /// @}

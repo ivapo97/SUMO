@@ -82,6 +82,7 @@ double PerIvanDefaults::minDistanceNoiseDeltaV = 0.1;
 double PerIvanDefaults::minSpeedNoiseDeltaV = 0.1;
 double PerIvanDefaults::distanceNoiseDeltaVCoeff = 0.001;
 double PerIvanDefaults::speedNoiseDeltaVCoeff = 0.001;
+double PerIvanDefaults::param1 = 1.0;
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -150,6 +151,7 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myMinSpeedNoiseDeltaV(PerIvanDefaults::minSpeedNoiseDeltaV),
     myDistanceNoiseDeltaVCoeff(PerIvanDefaults::distanceNoiseDeltaVCoeff),
     mySpeedNoiseDeltaVCoeff(PerIvanDefaults::speedNoiseDeltaVCoeff),
+    myParam1(PerIvanDefaults::param1),
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -182,11 +184,6 @@ MSSimplePerIvan::update() {
     updateReactionTime();
     // Update assumed gaps
     updateAssumedGaps();
-#ifdef DEBUG_AWARENESS
-    if (DEBUG_COND) {
-        std::cout << SIMTIME << " stepDuration=" << myStepDuration << ", error=" << myError.getState() << std::endl;
-    }
-#endif
 }
 
 void
@@ -226,11 +223,6 @@ void
 MSSimplePerIvan::setAwareness(const double value) {
     assert(value >= 0.);
     assert(value <= 1.);
-#ifdef DEBUG_AWARENESS
-    if (DEBUG_COND) {
-        std::cout << SIMTIME << " veh=" << myVehicle->getID() << ", setAwareness(" << MAX2(value, myMinAwareness) << ")" << std::endl;
-    }
-#endif
     myAwareness = MAX2(value, myMinAwareness);
     if (myAwareness == 1.) {
         myError.setState(0.);
@@ -241,7 +233,8 @@ MSSimplePerIvan::setAwareness(const double value) {
 
 double
 MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
-    return speed + myFreeSpeedErrorCoefficient * myError.getState() * sqrt(speed);
+    //return speed + myFreeSpeedErrorCoefficient * myError.getState() * sqrt(speed);
+    return speed;
 }
 
 
@@ -277,7 +270,7 @@ MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double speed, c
    
     double headwayPrecision = headwayDistancePrecision + headwaySpeedPrecision;
    
-    const double perceivedHeadway = trueGap + headwayAccuracy + myError.getState()*headwayPrecision;
+    const double perceivedHeadway = trueGap + headwayAccuracy + myParam1*myError.getState()*headwayPrecision;
         return perceivedHeadway;
 }
 
@@ -331,24 +324,8 @@ MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, c
 
     double deltaVPrecision = deltaVDistancePrecision + deltaVSpeedPrecision;
 
-    const double perceivedDeltaV = trueSpeedDifference + deltaVAccuracy + myError.getState() * deltaVPrecision;
+    const double perceivedDeltaV = trueSpeedDifference + deltaVAccuracy + myParam1 * myError.getState() * deltaVPrecision;
     return perceivedDeltaV;
-
-    //const double perceivedSpeedDifference = trueSpeedDifference + mySpeedDifferenceErrorCoefficient * myError.getState() * trueGap;
-    //const auto lastPerceivedSpeedDifference = myLastPerceivedSpeedDifference.find(objID);
-    //if (lastPerceivedSpeedDifference == myLastPerceivedSpeedDifference.end()
-    //    || fabs(perceivedSpeedDifference - lastPerceivedSpeedDifference->second) > mySpeedDifferenceChangePerceptionThreshold * trueGap * (1.0 - myAwareness)) {
-
-
-
-    //    // new perceived speed difference differs significantly from the previous
-    //    myLastPerceivedSpeedDifference[objID] = perceivedSpeedDifference;
-    //    return perceivedSpeedDifference;
-    //}
-    //else {
-    //    // new perceived speed difference doesn't differ significantly from the previous
-    //    return lastPerceivedSpeedDifference->second;
-    //}
 }
 
 
