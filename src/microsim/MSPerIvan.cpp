@@ -68,7 +68,7 @@ double PerIvanDefaults::headwayErrorCoefficient = 0.75;
 double PerIvanDefaults::persistentHeadwayError = 0.0;
 double PerIvanDefaults::optimalPerceptionRange = 50.0;
 double PerIvanDefaults::maximalPerceptionRange = 150.0;
-double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is larger than persistentHeadwayError  
+double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is larger than persistentHeadwayError  - maybe not?
 double PerIvanDefaults::headwayErrorShape = 1.0;
 double PerIvanDefaults::minDistanceNoiseHeadway = 0.1;
 double PerIvanDefaults::minSpeedNoiseHeadway = 0.1;
@@ -247,13 +247,13 @@ MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double speed, c
     }
     else if (trueGap<=myMaximalPerceptionRange) {
         if (myHeadwayErrorShape == 1.0) { //linear
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * ((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentHeadwayError;
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * ((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentHeadwayError;
         }
         else if (myHeadwayErrorShape == 2.0) { //quadratic
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentHeadwayError;
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentHeadwayError;
         }
         else if (myHeadwayErrorShape == 3.0) { //ellipse
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - pow(((trueGap - myMaxHeadwayError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentHeadwayError;
+            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentHeadwayError;
         }
     }
 
