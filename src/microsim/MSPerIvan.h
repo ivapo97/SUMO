@@ -194,6 +194,9 @@ public:
     inline double getParam1() const {
         return myParam1;
     }
+    inline double getParam2() const {
+        return myParam2;
+    }
     inline double getFreeSpeedErrorCoefficient() const {
         return myFreeSpeedErrorCoefficient;
     }
@@ -306,6 +309,9 @@ public:
     }
     inline void setParam1(const double value) {
         myParam1 = value;
+    }
+    inline void setParam2(const double value) {
+        myParam2 = value;
     }
     inline void setFreeSpeedErrorCoefficient(const double value) {
         myFreeSpeedErrorCoefficient = value;
@@ -447,6 +453,8 @@ private:
     double mySpeedNoiseDeltaVCoeff;
     /// @brief Calibration parameter scale precision
     double myParam1;
+    /// @brief Calibration parameter scale wiener process
+    double myParam2;
 
     /// @brief Thresholds above a change in the corresponding quantity is perceived.
     /// @note  In the comparison, we multiply the actual change amount by the current
@@ -513,6 +521,7 @@ struct PerIvanDefaults {
     static double distanceNoiseDeltaVCoeff;
     static double speedNoiseDeltaVCoeff;
     static double param1;
+    static double param2;
     static double freeSpeedErrorCoefficient;
     static double maximalReactionTimeFactor;
 };

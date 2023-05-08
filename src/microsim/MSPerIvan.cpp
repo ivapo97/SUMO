@@ -61,7 +61,7 @@ SumoRNG OUProcessIV::myRNG("perivan");
 
 double PerIvanDefaults::minAwareness = 0.1;
 double PerIvanDefaults::initialAwareness = 1.0;
-double PerIvanDefaults::errorTimeScaleCoefficient = 100.0;
+double PerIvanDefaults::errorTimeScaleCoefficient = 25.0;
 double PerIvanDefaults::errorNoiseIntensityCoefficient = 0.2;
 double PerIvanDefaults::speedDifferenceErrorCoefficient = 0.15;
 double PerIvanDefaults::headwayErrorCoefficient = 0.75;
@@ -83,6 +83,7 @@ double PerIvanDefaults::minSpeedNoiseDeltaV = 0.1;
 double PerIvanDefaults::distanceNoiseDeltaVCoeff = 0.001;
 double PerIvanDefaults::speedNoiseDeltaVCoeff = 0.001;
 double PerIvanDefaults::param1 = 1.0;
+double PerIvanDefaults::param2 = 1.0;
 double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
 double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
 double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
@@ -152,6 +153,7 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myDistanceNoiseDeltaVCoeff(PerIvanDefaults::distanceNoiseDeltaVCoeff),
     mySpeedNoiseDeltaVCoeff(PerIvanDefaults::speedNoiseDeltaVCoeff),
     myParam1(PerIvanDefaults::param1),
+    myParam2(PerIvanDefaults::param2),
     myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
     myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
@@ -194,14 +196,17 @@ MSSimplePerIvan::updateStepDuration() {
 
 void
 MSSimplePerIvan::updateError() {
-    if (myAwareness == 1.0 || myAwareness == 0.0) {
-        myError.setState(0.);
-    }
-    else {
-        myError.setTimeScale(myErrorTimeScaleCoefficient * myAwareness);
-        myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient * (1. - myAwareness));
-        myError.step(myStepDuration);
-    }
+    //if (myAwareness == 1.0 || myAwareness == 0.0) {
+    //    myError.setState(0.);
+    //}
+    //else {
+    //    myError.setTimeScale(myErrorTimeScaleCoefficient * myAwareness);
+    //    myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient * (1. - myAwareness));
+    //    myError.step(myStepDuration);
+    //}
+    myError.setTimeScale(myErrorTimeScaleCoefficient);
+    myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient);
+    myError.step(myStepDuration);
 }
 
 void
@@ -267,10 +272,11 @@ MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double speed, c
     if (speed > myOptimalSpeedRange) {
         headwaySpeedPrecision = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (speed - myOptimalSpeedRange);
     }
-   
+    double auxW = myParam2 * myError.getState();
+    double auxWtrans = (2 / (1+exp(-auxW))) - 1;
     double headwayPrecision = headwayDistancePrecision + headwaySpeedPrecision;
    
-    const double perceivedHeadway = trueGap + headwayAccuracy + myParam1*myError.getState()*headwayPrecision;
+    const double perceivedHeadway = trueGap + headwayAccuracy + (myParam1*auxWtrans*headwayPrecision);
         return perceivedHeadway;
 }
 
@@ -301,13 +307,13 @@ MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, c
     }
     else if (trueGap <= myMaximalPerceptionRange) {
         if (myDeltaVErrorShape == 1.0) { //linear
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * ((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentDeltaVError;
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * ((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentDeltaVError;
         }
         else if (myDeltaVErrorShape == 2.0) { //quadratic
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * pow(((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentDeltaVError;
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentDeltaVError;
         }
         else if (myDeltaVErrorShape == 3.0) { //ellipse
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * (1 - sqrt(1 - pow(((trueGap - myMaxDeltaVError) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentDeltaVError;
+            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * (1 - sqrt(1 - pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentDeltaVError;
         }
     }
 
