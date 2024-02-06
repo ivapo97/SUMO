@@ -21,7 +21,6 @@
 // The common superclass for modelling transportable objects like persons and containers
 /****************************************************************************/
 #include <config.h>
-
 #include <math.h>
 #include <cmath>
 #include <utils/common/RandHelper.h>

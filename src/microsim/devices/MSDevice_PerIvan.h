@@ -56,7 +56,7 @@ public:
      */
     static void insertOptions(OptionsCont& oc);
 
-
+    
     /** @brief Build devices for the given vehicle, if needed
      *
      * The options are read and evaluated whether a ToC-device shall be built
