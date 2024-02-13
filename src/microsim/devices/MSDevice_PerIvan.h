@@ -23,7 +23,6 @@
 /****************************************************************************/
 #pragma once
 #include <config.h>
-
 #include "MSVehicleDevice.h"
 #include <utils/common/SUMOTime.h>
 #include <utils/common/WrappingCommand.h>
@@ -43,9 +42,8 @@ class MSSimplePerIvan;
 /**
  * @class MSDevice_PerIvan
  *
- * @brief The ToC Device controls transition of control between automated and manual driving.
+ * @brief The PerIvan Device controls the estimation of the headway
  * @todo: Provide logging facilities
- * @todo: allow manual and automated type to refer to vTypeDistributions
  *
  * @see MSDevice
  */
@@ -55,11 +53,10 @@ public:
      * @param[filled] oc The options container to add the options to
      */
     static void insertOptions(OptionsCont& oc);
-
-    
+        
     /** @brief Build devices for the given vehicle, if needed
      *
-     * The options are read and evaluated whether a ToC-device shall be built
+     * The options are read and evaluated whether a PerIvan-device shall be built
      *  for the given vehicle.
      *
      * The built device is stored in the given vector.
