@@ -12,15 +12,13 @@
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPerIvan.h
-/// @author  Michael Behrisch
+/// @author  Ivan Postigo
 /// @date    Tue, 21 Apr 2015
 ///
-// A class representing a vehicle driver's current mental state
+// A class representing a vehicle driver's current perception performance
 /****************************************************************************/
 
-
 /// @todo: check parameter admissibility in setter methods
-
 
 #pragma once
 #include <config.h>
@@ -28,7 +26,6 @@
 #include <memory>
 #include <utils/common/SUMOTime.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
-
 
 // ===========================================================================
 // class definitions
@@ -41,102 +38,74 @@ public:
     OUProcessIV(double initialState, double timeScale, double noiseIntensity);
     /// @brief destructor
     ~OUProcessIV();
-
     /// @brief evolve for a time step of length dt.
     void step(double dt);
     /// @brief static version of the step()
     static double step(double state, double dt, double timeScale, double noiseIntensity);
-
     /// @brief set the process' timescale to a new value
     void setTimeScale(double timeScale) {
         myTimeScale = timeScale;
     };
-
     /// @brief set the process' noise intensity to a new value
     void setNoiseIntensity(double noiseIntensity) {
         myNoiseIntensity = noiseIntensity;
     };
-
     /// @brief set the process' state to a new value
     void setState(double state) {
         myState = state;
     };
-
     inline double getNoiseIntensity() const {
         return myNoiseIntensity;
     };
-
     inline double getTimeScale() const {
         return myTimeScale;
     };
-
-
     /// @brief Obtain the current state of the process
     double getState() const;
-
 
     static SumoRNG* getRNG() {
         return &myRNG;
     }
 
 private:
-    /** @brief The current state of the process
-     */
+    /// @brief The current state of the process
     double myState;
-
-    /** @brief The time scale of the process
-     */
+    /// @brief The time scale of the process
     double myTimeScale;
-
-    /** @brief The noise intensity of the process
-     */
+    /// @brief The noise intensity of the process
     double myNoiseIntensity;
-
     /// @brief Random generator for OUProcessIVes
     static SumoRNG myRNG;
 };
 
-
 /// @class MSSimplePerIvan
-/// @brief Provides an interface to an error whose fluctuation is controlled
-///        via the driver's 'awareness', which can be controlled externally, @see MSDevice_ToC
+/// @brief Provides an interface to a perception error 
 class MSSimplePerIvan {
 
 public:
     MSSimplePerIvan(MSVehicle* veh);
     virtual ~MSSimplePerIvan() {};
 
-
     /// @name Getter methods
     ///@{
-    inline double getMinAwareness() const {
-        return myMinAwareness;
-    }
-
-    inline double getInitialAwareness() const {
-        return myInitialAwareness;
-    }
-
     inline double getErrorTimeScaleCoefficient() const {
         return myErrorTimeScaleCoefficient;
     }
-
+    inline double getPerceptionDelay() const {
+        return myPerceptionDelay;
+    }
     inline double getErrorNoiseIntensityCoefficient() const {
         return myErrorNoiseIntensityCoefficient;
     }
-
     inline double getErrorTimeScale() const {
         return myError.getTimeScale();
     }
-
     inline double getErrorNoiseIntensity() const {
         return myError.getNoiseIntensity();
     }
-
     inline double getSpeedDifferenceErrorCoefficient() const {
         return mySpeedDifferenceErrorCoefficient;
     }
-
     inline double getHeadwayErrorCoefficient() const {
         return myHeadwayErrorCoefficient;
     }
@@ -200,31 +169,21 @@ public:
     inline double getFreeSpeedErrorCoefficient() const {
         return myFreeSpeedErrorCoefficient;
     }
-
     inline double getSpeedDifferenceChangePerceptionThreshold() const {
         return mySpeedDifferenceChangePerceptionThreshold;
     }
-
     inline double getHeadwayChangePerceptionThreshold() const {
         return myHeadwayChangePerceptionThreshold;
     }
-
-    inline double getAwareness() const {
-        return myAwareness;
-    }
-
     inline double getMaximalReactionTime() const {
         return myMaximalReactionTime;
     }
-
     inline double getOriginalReactionTime() const {
         return myOriginalReactionTime;
     }
-
     inline double getActionStepLength() const {
         return myActionStepLength;
     }
-
     inline double getErrorState() const {
         return myError.getState();
     };
@@ -233,26 +192,18 @@ public:
 
     /// @name Setter methods
     ///@{
-    inline void setMinAwareness(const double value) {
-        myMinAwareness = value;
-    }
-
-    inline void setInitialAwareness(const double value) {
-        myInitialAwareness = value;
-    }
-
     inline void setErrorTimeScaleCoefficient(const double value) {
         myErrorTimeScaleCoefficient = value;
     }
-
+    inline void setPerceptionDelay(const double value) {
+        myPerceptionDelay = value;
+    }
     inline void setErrorNoiseIntensityCoefficient(const double value) {
         myErrorNoiseIntensityCoefficient = value;
     }
-
     inline void setSpeedDifferenceErrorCoefficient(const double value) {
         mySpeedDifferenceErrorCoefficient = value;
     }
-
     inline void setHeadwayErrorCoefficient(const double value) {
         myHeadwayErrorCoefficient = value;
     }
@@ -330,17 +281,12 @@ public:
         myOriginalReactionTime = value;
         updateReactionTime();
     }
-
-    void setAwareness(const double value);
-
     inline void setErrorState(const double state) {
         myError.setState(state);
     };
-
     inline void setErrorTimeScale(const double value) {
         myError.setTimeScale(value);
     }
-
     inline void setErrorNoiseIntensity(const double value) {
         myError.setNoiseIntensity(value);
     }
@@ -349,39 +295,21 @@ public:
     /// @brief Trigger updates for the errorProcess, assumed gaps, etc
     void update();
 
-
-    /// @brief Update the assumed gaps to the known objects according to
-    ///        the corresponding perceived speed differences.
-    void updateAssumedGaps();
-
-    /// @name Methods to obtain the current error quantities to be used by the car-following model
-    /// @see TCIModel
-    /// @{
-//    /// @see myAccelerationError
-//    inline double getAppliedAcceleration(double desiredAccel) {
-//        return desiredAccel + myError.getState();
-//    };
-
-    /// @brief apply perception error to own speed
-    double getPerceivedOwnSpeed(double speed);
-
     /// @brief This method checks whether the errorneous speed difference that would be perceived for this step
     ///        differs sufficiently from the previously perceived to be actually perceived. If so, it sets the
     ///        flag myReactionFlag[objID]=true, which should be checked just after the call to this method because
     ///        it will be overwritten by subsequent calls.
-    double getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const double speed, const void* objID = nullptr);
+    double getPerceivedSpeedDifference(const double trueSpeedDifference, const void* objID);
     /// @see myHeadwayPerceptionError
-    double getPerceivedHeadway(const double trueGap, const double speed, const void* objID = nullptr);
+    double getPerceivedDistance(const double trueDistance, const double ownSpeed, const void* objID = nullptr);
     /// @}
 
     inline void lockDebug() {
         myDebugLock = true;
     }
-
     inline void unlockDebug() {
         myDebugLock = false;
     }
-
     inline bool debugLocked() const {
         return myDebugLock;
     }
@@ -395,28 +323,20 @@ private:
     void updateReactionTime();
 
 private:
-
     /// @brief Vehicle corresponding to this per ivan
     MSVehicle* myVehicle;
-
-    /// @brief Driver's 'awareness' \in [0,1]
-    double myAwareness;
-    /// @brief Minimal value for 'awareness' \in [0,1]
-    double myMinAwareness;
-    /// @brief Initial value for 'awareness' \in [0,1]
-    double myInitialAwareness;
-    /// @brief Driver's 'error', @see TCI_Model
+    /// @brief Driver's 'error',
     OUProcessIV myError;
     /// @brief Coefficient controlling the impact of awareness on the time scale of the error process
     double myErrorTimeScaleCoefficient;
+    /// @brief Perception delay
+    double myPerceptionDelay;
     /// @brief Coefficient controlling the impact of awareness on the noise intensity of the error process
     double myErrorNoiseIntensityCoefficient;
-
     /// @brief Scaling coefficients for the magnitude of errors
     double mySpeedDifferenceErrorCoefficient;
     double myHeadwayErrorCoefficient;
     double myFreeSpeedErrorCoefficient;
-
     /// @brief Persistent headway error
     double myPersistentHeadwayError;
     /// @brief Perception range without increase in errors
@@ -461,8 +381,6 @@ private:
     ///       gap to the object to reflect a more precise perception if the object is closer.
     double myHeadwayChangePerceptionThreshold;
     double mySpeedDifferenceChangePerceptionThreshold;
-    //    // @brief if a perception threshold is passed for some object, a flag is set to induce a reaction to the object
-    //    std::map<void*, bool> myReactionFlag;
 
         /// @brief Action step length (~current maximal reaction time) induced by awareness level
         /// @note  This interpolates linearly from myOriginalReactionTime for awareness==1
@@ -476,16 +394,16 @@ private:
     /// @name Variables for tracking update instants
     /// @see updateStepDuration()
     /// @{
-    /// @brief Elapsed time since the last state update
+    /// @brief Elapsed time since the last state update in seconds
     double myStepDuration;
     /// @brief Time point of the last state update
     double myLastUpdateTime;
 
     /// @brief The assumed gaps to different objects
     /// @todo: update each step to incorporate the assumed change given a specific speed difference
-    std::map<const void*, double> myAssumedGap;
+    std::map<const void*, double> myPerceivedDistances;
     /// @brief The last perceived speed differences to the corresponding objects
-    std::map<const void*, double> myLastPerceivedSpeedDifference;
+    std::map<const void*, double> myPerceivedSpeedDifference;
     /// @}
 
     /// @brief Used to prevent infinite loops in debugging outputs, @see followSpeed() and stopSpeed() (of MSCFModel_Krauss, e.g.)
@@ -495,9 +413,8 @@ private:
 
 /// @brief Default values for the MSPerIvan parameters
 struct PerIvanDefaults {
-    static double minAwareness;
-    static double initialAwareness;
     static double errorTimeScaleCoefficient;
+    static double perceptionDelay;
     static double errorNoiseIntensityCoefficient;
     static double speedDifferenceErrorCoefficient;
     static double speedDifferenceChangePerceptionThreshold;

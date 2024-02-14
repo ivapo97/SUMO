@@ -62,10 +62,10 @@ void
 MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.addOptionSubTopic("Per Ivan Device");
     insertDefaultAssignmentOptions("perivan", "Per Ivan Device", oc);
-    oc.doRegister("device.perivan.initialAwareness", new Option_Float(PerIvanDefaults::initialAwareness));
-    oc.addDescription("device.perivan.initialAwareness", TL("Per Ivan Device"), TL("Initial value assigned to the driver's awareness."));
     oc.doRegister("device.perivan.errorTimeScaleCoefficient", new Option_Float(PerIvanDefaults::errorTimeScaleCoefficient));
     oc.addDescription("device.perivan.errorTimeScaleCoefficient", TL("Per Ivan Device"), TL("Time scale for the error process."));
+    oc.doRegister("device.perivan.perceptionDelay", new Option_Float(PerIvanDefaults::perceptionDelay));
+    oc.addDescription("device.perivan.perceptionDelay", TL("Per Ivan Device"), TL("Perception delay."));
     oc.doRegister("device.perivan.errorNoiseIntensityCoefficient", new Option_Float(PerIvanDefaults::errorNoiseIntensityCoefficient));
     oc.addDescription("device.perivan.errorNoiseIntensityCoefficient", TL("Per Ivan Device"), TL("Noise intensity driving the error process."));
     oc.doRegister("device.perivan.speedDifferenceErrorCoefficient", new Option_Float(PerIvanDefaults::speedDifferenceErrorCoefficient));
@@ -116,22 +116,16 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.addDescription("device.perivan.speedDifferenceChangePerceptionThreshold", TL("Per Ivan Device"), TL("Base threshold for recognizing changes in the speed difference (threshold also scales with distance)."));
     oc.doRegister("device.perivan.headwayChangePerceptionThreshold", new Option_Float(PerIvanDefaults::headwayChangePerceptionThreshold));
     oc.addDescription("device.perivan.headwayChangePerceptionThreshold", TL("Per Ivan Device"), TL("Base threshold for recognizing changes in the headway (threshold also scales with distance)."));
-    oc.doRegister("device.perivan.minAwareness", new Option_Float(PerIvanDefaults::minAwareness));
-    oc.addDescription("device.perivan.minAwareness", TL("Per Ivan Device"), TL("Minimal admissible value for the driver's awareness."));
     oc.doRegister("device.perivan.maximalReactionTime", new Option_Float(-1.0));
     oc.addDescription("device.perivan.maximalReactionTime", TL("Per Ivan Device"), TL("Maximal reaction time (~action step length) induced by decreased awareness level (reached for awareness=minAwareness)."));
 }
 
-
 void
 MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>& into) {
     OptionsCont& oc = OptionsCont::getOptions();
-    ///@todo: what is this about? Ivan
-    // ToC device implies this device 
-    if (equippedByDefaultAssignmentOptions(oc, "perivan", v, false) || equippedByDefaultAssignmentOptions(oc, "toc", v, false)) {
-        const double minAwareness = getMinAwareness(v, oc);
-        const double initialAwareness = getInitialAwareness(v, oc);
+    if (equippedByDefaultAssignmentOptions(oc, "perivan", v, false)) {
         const double errorTimeScaleCoefficient = getErrorTimeScaleCoefficient(v, oc);
+        const double perceptionDelay = getPerceptionDelay(v, oc);
         const double errorNoiseIntensityCoefficient = getErrorNoiseIntensityCoefficient(v, oc);
         const double speedDifferenceErrorCoefficient = getSpeedDifferenceErrorCoefficient(v, oc);
         const double speedDifferenceChangePerceptionThreshold = getSpeedDifferenceChangePerceptionThreshold(v, oc);
@@ -160,9 +154,8 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
         const double maximalReactionTime = getMaximalReactionTime(v, oc);
         // build the device
         MSDevice_PerIvan* device = new MSDevice_PerIvan(v, "perivan" + v.getID(),
-            minAwareness,
-            initialAwareness,
             errorTimeScaleCoefficient,
+            perceptionDelay,
             errorNoiseIntensityCoefficient,
             speedDifferenceErrorCoefficient,
             speedDifferenceChangePerceptionThreshold,
@@ -193,18 +186,13 @@ MSDevice_PerIvan::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevic
     }
 }
 
-
-double
-MSDevice_PerIvan::getMinAwareness(const SUMOVehicle& v, const OptionsCont& oc) {
-    return getFloatParam(v, oc, "perivan.minAwareness", PerIvanDefaults::minAwareness, false);
-}
-double
-MSDevice_PerIvan::getInitialAwareness(const SUMOVehicle& v, const OptionsCont& oc) {
-    return getFloatParam(v, oc, "perivan.initialAwareness", PerIvanDefaults::initialAwareness, false);
-}
 double
 MSDevice_PerIvan::getErrorTimeScaleCoefficient(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.errorTimeScaleCoefficient", PerIvanDefaults::errorTimeScaleCoefficient, false);
+}
+double
+MSDevice_PerIvan::getPerceptionDelay(const SUMOVehicle& v, const OptionsCont& oc) {
+    return getFloatParam(v, oc, "perivan.perceptionDelay", PerIvanDefaults::perceptionDelay, false);
 }
 double
 MSDevice_PerIvan::getErrorNoiseIntensityCoefficient(const SUMOVehicle& v, const OptionsCont& oc) {
@@ -317,9 +305,8 @@ MSDevice_PerIvan::getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont
 // MSDevice_PerIvan-methods
 // ---------------------------------------------------------------------------
 MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
-    double minAwareness,
-    double initialAwareness,
     double errorTimeScaleCoefficient,
+    double perceptionDelay,
     double errorNoiseIntensityCoefficient,
     double speedDifferenceErrorCoefficient,
     double speedDifferenceChangePerceptionThreshold,
@@ -347,9 +334,8 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     double freeSpeedErrorCoefficient,
     double maximalReactionTime) :
     MSVehicleDevice(holder, id),
-    myMinAwareness(minAwareness),
-    myInitialAwareness(initialAwareness),
     myErrorTimeScaleCoefficient(errorTimeScaleCoefficient),
+    myPerceptionDelay(perceptionDelay),
     myErrorNoiseIntensityCoefficient(errorNoiseIntensityCoefficient),
     mySpeedDifferenceErrorCoefficient(speedDifferenceErrorCoefficient),
     mySpeedDifferenceChangePerceptionThreshold(speedDifferenceChangePerceptionThreshold),
@@ -379,29 +365,13 @@ MSDevice_PerIvan::MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
     // Take care! Holder is currently being constructed. Cast occurs before completion.
     myHolderMS = static_cast<MSVehicle*>(&holder);
     initPerIvan();
-
-
-#ifdef DEBUG_DSDEVICE
-    std::cout << "initialized device '" << id << "' with "
-        << "myMinAwareness=" << myMinAwareness << ", "
-        << "myInitialAwareness=" << myInitialAwareness << ", "
-        << "myErrorTimeScaleCoefficient=" << myErrorTimeScaleCoefficient << ", "
-        << "myErrorNoiseIntensityCoefficient=" << myErrorNoiseIntensityCoefficient << ", "
-        << "mySpeedDifferenceErrorCoefficient=" << mySpeedDifferenceErrorCoefficient << ", "
-        << "mySpeedDifferenceChangePerceptionThreshold=" << mySpeedDifferenceChangePerceptionThreshold << ", "
-        << "myHeadwayChangePerceptionThreshold=" << myHeadwayChangePerceptionThreshold << ", "
-        << "myHeadwayErrorCoefficient=" << myHeadwayErrorCoefficient << std::endl;
-    << "myFreeSpeedErrorCoefficient=" << myFreeSpeedErrorCoefficient << std::endl;
-#endif
-
 }
 
 void
 MSDevice_PerIvan::initPerIvan() {
     myPerIvan = std::make_shared<MSSimplePerIvan>(myHolderMS);
-    myPerIvan->setMinAwareness(myMinAwareness);
-    myPerIvan->setInitialAwareness(myInitialAwareness);
     myPerIvan->setErrorTimeScaleCoefficient(myErrorTimeScaleCoefficient);
+    myPerIvan->setPerceptionDelay(myPerceptionDelay);
     myPerIvan->setErrorNoiseIntensityCoefficient(myErrorNoiseIntensityCoefficient);
     myPerIvan->setSpeedDifferenceErrorCoefficient(mySpeedDifferenceErrorCoefficient);
     myPerIvan->setHeadwayErrorCoefficient(myHeadwayErrorCoefficient);
@@ -427,7 +397,6 @@ MSDevice_PerIvan::initPerIvan() {
     myPerIvan->setFreeSpeedErrorCoefficient(myFreeSpeedErrorCoefficient);
     myPerIvan->setSpeedDifferenceChangePerceptionThreshold(mySpeedDifferenceChangePerceptionThreshold);
     myPerIvan->setHeadwayChangePerceptionThreshold(myHeadwayChangePerceptionThreshold);
-    myPerIvan->setAwareness(myInitialAwareness);
     if (myMaximalReactionTime > 0) {
         myPerIvan->setMaximalReactionTime(myMaximalReactionTime);
     }
@@ -443,10 +412,7 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
 #ifdef DEBUG_DSDEVICE
     std::cout << "MSDevice_PerIvan::getParameter(key=" << key << ")" << std::endl;
 #endif
-    if (key == "awareness") {
-        return toString(myPerIvan->getAwareness());
-    }
-    else if (key == "errorState") {
+    if (key == "errorState") {
         return toString(myPerIvan->getErrorState());
     }
     else if (key == "errorTimeScale") {
@@ -455,14 +421,11 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
     else if (key == "errorNoiseIntensity") {
         return toString(myPerIvan->getErrorNoiseIntensity());
     }
-    else if (key == "minAwareness") {
-        return toString(myPerIvan->getMinAwareness());
-    }
-    else if (key == "initialAwareness") {
-        return toString(myPerIvan->getInitialAwareness());
-    }
     else if (key == "errorTimeScaleCoefficient") {
         return toString(myPerIvan->getErrorTimeScaleCoefficient());
+    }
+    else if (key == "perceptionDelay") {
+        return toString(myPerIvan->getPerceptionDelay());
     }
     else if (key == "errorNoiseIntensityCoefficient") {
         return toString(myPerIvan->getErrorNoiseIntensityCoefficient());
@@ -554,10 +517,8 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
 #ifdef DEBUG_DSDEVICE
     std::cout << "MSDevice_PerIvan::setParameter(key=" << key << ", value=" << value << ")" << std::endl;
 #endif
-    if (key == "awareness") {
-        myPerIvan->setAwareness(StringUtils::toDouble(value));
-    }
-    else if (key == "errorState") {
+
+    if (key == "errorState") {
         myPerIvan->setErrorState(StringUtils::toDouble(value));
     }
     else if (key == "errorTimeScale") {
@@ -566,14 +527,11 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
     else if (key == "errorNoiseIntensity") {
         myPerIvan->setErrorNoiseIntensity(StringUtils::toDouble(value));
     }
-    else if (key == "minAwareness") {
-        myPerIvan->setMinAwareness(StringUtils::toDouble(value));
-    }
-    else if (key == "initialAwareness") {
-        myPerIvan->setInitialAwareness(StringUtils::toDouble(value));
-    }
     else if (key == "errorTimeScaleCoefficient") {
         myPerIvan->setErrorTimeScaleCoefficient(StringUtils::toDouble(value));
+    }
+    else if (key == "perceptionDelay") {
+        myPerIvan->setPerceptionDelay(StringUtils::toDouble(value));
     }
     else if (key == "errorNoiseIntensityCoefficient") {
         myPerIvan->setErrorNoiseIntensityCoefficient(StringUtils::toDouble(value));

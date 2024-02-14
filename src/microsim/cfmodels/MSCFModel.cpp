@@ -1082,27 +1082,13 @@ MSCFModel::calculateEmergencyDeceleration(double gap, double egoSpeed, double pr
 }
 
 
-//void
-//MSCFModel::applyOwnSpeedPerceptionError(const MSVehicle* const veh, double &speed) const {
-//    if (!veh->hasDriverState()) {
-//        return;
-//    }
-//    speed = veh->getDriverState()->getPerceivedOwnSpeed(speed);
-//}
-
 void
-MSCFModel::applyOwnSpeedPerceptionError(const MSVehicle* const veh, double& speed) const {
-    if (veh->hasDriverState()) {
-        speed = veh->getDriverState()->getPerceivedOwnSpeed(speed);
-    }
-    else if (veh->hasPerIvan()) {
-        speed = veh->getPerIvan()->getPerceivedOwnSpeed(speed);
-    }
-    else {
+MSCFModel::applyOwnSpeedPerceptionError(const MSVehicle* const veh, double &speed) const {
+    if (!veh->hasDriverState()) {
         return;
     }
+    speed = veh->getDriverState()->getPerceivedOwnSpeed(speed);
 }
-
 
 
 //void
@@ -1154,8 +1140,8 @@ MSCFModel::applyHeadwayAndSpeedDifferencePerceptionErrors(const MSVehicle* const
     }
     else if (veh->hasPerIvan()) {
         // Obtain perceived gap and headway from the per ivan
-        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, speed, pred);
-        const double perceivedSpeedDifference = veh->getPerIvan()->getPerceivedSpeedDifference(predSpeed - speed, gap, speed, pred);
+        const double perceivedGap = veh->getPerIvan()->getPerceivedDistance(gap, speed, pred);
+        const double perceivedSpeedDifference = veh->getPerIvan()->getPerceivedSpeedDifference(predSpeed - speed, pred);
 
         gap = perceivedGap;
         predSpeed = speed + perceivedSpeedDifference;
@@ -1199,7 +1185,7 @@ MSCFModel::applyHeadwayAndSpeedDifferencePerceptionErrors(const MSVehicle* const
 //}
 
 void
-MSCFModel::applyHeadwayPerceptionError(const MSVehicle* const veh, double speed, double& gap) const {
+MSCFModel::applyHeadwayPerceptionError(const MSVehicle* const veh, double speed, double& gap, const MSVehicle* const pred) const {
     UNUSED_PARAMETER(speed);
     if (veh->hasDriverState()) {
         // @todo: Provide objectID (e.g. pointer address for the relevant object at the given distance(gap))
@@ -1213,7 +1199,7 @@ MSCFModel::applyHeadwayPerceptionError(const MSVehicle* const veh, double speed,
     else if (veh->hasPerIvan()) {
 
         // Obtain perceived gap from per ivan
-        const double perceivedGap = veh->getPerIvan()->getPerceivedHeadway(gap, speed);
+        const double perceivedGap = veh->getPerIvan()->getPerceivedDistance(gap, speed);
         gap = perceivedGap;
     }
     else {

@@ -23,9 +23,9 @@
 /****************************************************************************/
 #pragma once
 #include <config.h>
-#include "MSVehicleDevice.h"
 #include <utils/common/SUMOTime.h>
 #include <utils/common/WrappingCommand.h>
+#include "MSVehicleDevice.h"
 
 
 // ===========================================================================
@@ -77,9 +77,8 @@ public:
 private:
     /// @name Helpers for parameter parsing
     /// @{
-    static double getMinAwareness(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getInitialAwareness(const SUMOVehicle& v, const OptionsCont& oc);
     static double getErrorTimeScaleCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getPerceptionDelay(const SUMOVehicle& v, const OptionsCont& oc);
     static double getErrorNoiseIntensityCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getSpeedDifferenceErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
     static double getSpeedDifferenceChangePerceptionThreshold(const SUMOVehicle& v, const OptionsCont& oc);
@@ -132,9 +131,8 @@ private:
      * @param[in] id The ID of the device
      */
     MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
-        double minAwareness,
-        double initialAwareness,
         double errorTimeScaleCoefficient,
+        double perceptionDelay,
         double errorNoiseIntensityCoefficient,
         double speedDifferenceErrorCoefficient,
         double speedDifferenceChangePerceptionThreshold,
@@ -172,9 +170,8 @@ private:
     /// @name Temporary to hold perivan parameters until initialization.
     /// @note Invalid after call to initPerIvan().
     /// @{
-    double myMinAwareness;
-    double myInitialAwareness;
     double myErrorTimeScaleCoefficient;
+    double myPerceptionDelay;
     double myErrorNoiseIntensityCoefficient;
     double mySpeedDifferenceErrorCoefficient;
     double mySpeedDifferenceChangePerceptionThreshold;

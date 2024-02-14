@@ -40,10 +40,9 @@
 // ===========================================================================
 //#define DEBUG_OUPROCESS
 //#define DEBUG_TRAFFIC_ITEMS
-//#define DEBUG_AWARENESS
 //#define DEBUG_PERCEPTION_ERRORS
 //#define DEBUG_DRIVERSTATE
-#define DEBUG_COND (true)
+//#define DEBUG_COND (true)
 //#define DEBUG_COND (myVehicle->isSelected())
 
 
@@ -58,16 +57,15 @@ SumoRNG OUProcessIV::myRNG("perivan");
 // Default value definitions
 // ===========================================================================
 
-double PerIvanDefaults::minAwareness = 0.1;
-double PerIvanDefaults::initialAwareness = 1.0;
 double PerIvanDefaults::errorTimeScaleCoefficient = 25.0;
+double PerIvanDefaults::perceptionDelay = 0.0;
 double PerIvanDefaults::errorNoiseIntensityCoefficient = 0.2;
 double PerIvanDefaults::speedDifferenceErrorCoefficient = 0.15;
 double PerIvanDefaults::headwayErrorCoefficient = 0.75;
 double PerIvanDefaults::persistentHeadwayError = 0.0;
 double PerIvanDefaults::optimalPerceptionRange = 50.0;
 double PerIvanDefaults::maximalPerceptionRange = 150.0;
-double PerIvanDefaults::maxHeadwayError = 5.0; ///@todo: ensure this value is larger than persistentHeadwayError  - maybe not?
+double PerIvanDefaults::maxHeadwayError = 5.0;
 double PerIvanDefaults::headwayErrorShape = 1.0;
 double PerIvanDefaults::minDistanceNoiseHeadway = 0.1;
 double PerIvanDefaults::minSpeedNoiseHeadway = 0.1;
@@ -98,19 +96,11 @@ OUProcessIV::OUProcessIV(double initialState, double timeScale, double noiseInte
       myTimeScale(timeScale),
       myNoiseIntensity(noiseIntensity) {}
 
-
 OUProcessIV::~OUProcessIV() {}
-
 
 void
 OUProcessIV::step(double dt) {
-#ifdef DEBUG_OUPROCESS
-    const double oldstate = myState;
-#endif
     myState = exp(-dt / myTimeScale) * myState + myNoiseIntensity * sqrt(2 * dt / myTimeScale) * RandHelper::randNorm(0, 1, &myRNG);
-#ifdef DEBUG_OUPROCESS
-    std::cout << "  OU-step (" << dt << " s.): " << oldstate << "->" << myState << std::endl;
-#endif
 }
 
 double
@@ -124,13 +114,11 @@ OUProcessIV::getState() const {
     return myState;
 }
 
-
 MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myVehicle(veh),
-    myAwareness(1.),
-    myMinAwareness(PerIvanDefaults::minAwareness),
     myError(0., 1., 1.),
     myErrorTimeScaleCoefficient(PerIvanDefaults::errorTimeScaleCoefficient),
+    myPerceptionDelay(PerIvanDefaults::perceptionDelay),
     myErrorNoiseIntensityCoefficient(PerIvanDefaults::errorNoiseIntensityCoefficient),
     mySpeedDifferenceErrorCoefficient(PerIvanDefaults::speedDifferenceErrorCoefficient),
     myHeadwayErrorCoefficient(PerIvanDefaults::headwayErrorCoefficient),
@@ -158,33 +146,21 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
     myOriginalReactionTime(veh->getActionStepLengthSecs()),
     myMaximalReactionTime(PerIvanDefaults::maximalReactionTimeFactor* myOriginalReactionTime),
-    //    myActionStepLength(TS),
     myStepDuration(TS),
     myLastUpdateTime(SIMTIME - TS),
     myDebugLock(false) {
-#ifdef DEBUG_DRIVERSTATE
-    std::cout << "Constructing per ivan for veh '" << veh->getID() << "'." << std::endl;
-#endif
     updateError();
     updateReactionTime();
 }
 
-
 void
 MSSimplePerIvan::update() {
-#ifdef DEBUG_AWARENESS
-    if (DEBUG_COND) {
-        std::cout << SIMTIME << " veh=" << myVehicle->getID() << ", DriverState::update()" << std::endl;
-    }
-#endif
     // Adapt step duration
     updateStepDuration();
     // Update error
     updateError();
     // Update actionStepLength, aka reaction time
     updateReactionTime();
-    // Update assumed gaps
-    updateAssumedGaps();
 }
 
 void
@@ -195,14 +171,6 @@ MSSimplePerIvan::updateStepDuration() {
 
 void
 MSSimplePerIvan::updateError() {
-    //if (myAwareness == 1.0 || myAwareness == 0.0) {
-    //    myError.setState(0.);
-    //}
-    //else {
-    //    myError.setTimeScale(myErrorTimeScaleCoefficient * myAwareness);
-    //    myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient * (1. - myAwareness));
-    //    myError.step(myStepDuration);
-    //}
     myError.setTimeScale(myErrorTimeScaleCoefficient);
     myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient);
     myError.step(myStepDuration);
@@ -210,130 +178,65 @@ MSSimplePerIvan::updateError() {
 
 void
 MSSimplePerIvan::updateReactionTime() {
-    if (myAwareness == 1.0 || myAwareness == 0.0) {
-        myActionStepLength = myOriginalReactionTime;
+    myActionStepLength = myOriginalReactionTime + myPerceptionDelay;
+}
+
+double
+MSSimplePerIvan::getPerceivedDistance(const double trueDistance, const double speed, const void* objID) {
+    double accuracy = 500 * myMaximalPerceptionRange;
+    //this means that if the vehicle is beyond my range, then i assign a very large error.
+    double precisionDistance = myMinDistanceNoiseHeadway;
+    double precisionSpeed = myMinSpeedNoiseHeadway;
+    
+    if (trueDistance <= myOptimalPerceptionRange) {
+        accuracy = myPersistentHeadwayError;
+    }
+    else if (trueDistance <= myMaximalPerceptionRange) {
+        accuracy = myPersistentHeadwayError + (((myMaxHeadwayError - myPersistentHeadwayError) / pow((myMaximalPerceptionRange - myOptimalPerceptionRange), myHeadwayErrorShape)) * pow((trueDistance - myOptimalPerceptionRange), myHeadwayErrorShape));
+    }
+    // distance precision
+    if (trueDistance > myOptimalPerceptionRange) {
+        precisionDistance = myMinDistanceNoiseHeadway + myDistanceNoiseHeadwayCoeff*(trueDistance - myOptimalPerceptionRange);
+    }
+    // speed precision
+    if (speed > myOptimalSpeedRange) {
+        precisionSpeed = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (speed - myOptimalSpeedRange);
+    }
+    double auxW = myError.getState();
+    double auxWtrans = (2 / (1+exp(-auxW))) - 1;
+    double precision = precisionDistance + precisionSpeed;   
+    const double perceivedDistance = trueDistance + accuracy + (auxWtrans*precision);
+
+    // store the current perceived distance to the object
+    const auto lastPerceivedDistance = myPerceivedDistances.find(objID);
+    double thisPerceivedSpeedDifference;
+    if (lastPerceivedDistance == myPerceivedDistances.end()) {
+        myPerceivedDistances[objID] = perceivedDistance;
+        myPerceivedSpeedDifference[objID] = 500;//this is a large value in m/s for it not to be considered
     }
     else {
-        const double theta = (myAwareness - myMinAwareness) / (1.0 - myMinAwareness);
-        myActionStepLength = myOriginalReactionTime + theta * (myMaximalReactionTime - myOriginalReactionTime);
-        // Round to multiple of simstep length
-        int quotient;
-        remquo(myActionStepLength, TS, &quotient);
-        myActionStepLength = TS * MAX2(quotient, 1);
+        thisPerceivedSpeedDifference = (perceivedDistance - lastPerceivedDistance->second) / myStepDuration;
+        myPerceivedSpeedDifference[objID] = thisPerceivedSpeedDifference;
+        myPerceivedDistances[objID] = perceivedDistance;
     }
-}
 
-void
-MSSimplePerIvan::setAwareness(const double value) {
-    assert(value >= 0.);
-    assert(value <= 1.);
-    myAwareness = MAX2(value, myMinAwareness);
-    if (myAwareness == 1.) {
-        myError.setState(0.);
-    }
-    updateReactionTime();
+    return perceivedDistance;
 }
-
 
 double
-MSSimplePerIvan::getPerceivedOwnSpeed(double speed) {
-    //return speed + myFreeSpeedErrorCoefficient * myError.getState() * sqrt(speed);
-    return speed;
-}
-
-
-double
-MSSimplePerIvan::getPerceivedHeadway(const double trueGap, const double speed, const void* objID) {
-    double headwayAccuracy = 50 * myMaximalPerceptionRange;
-
-    if (trueGap<=myOptimalPerceptionRange) {
-        headwayAccuracy = myPersistentHeadwayError;
+MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, const void* objID) {
+    const auto perceivedSpeedDifference = myPerceivedSpeedDifference.find(objID);
+    if (perceivedSpeedDifference == myPerceivedSpeedDifference.end()) {
+        return trueSpeedDifference;
     }
-    else if (trueGap<=myMaximalPerceptionRange) {
-        if (myHeadwayErrorShape == 1.0) { //linear
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * ((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentHeadwayError;
-        }
-        else if (myHeadwayErrorShape == 2.0) { //quadratic
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentHeadwayError;
-        }
-        else if (myHeadwayErrorShape == 3.0) { //ellipse
-            headwayAccuracy = (myMaxHeadwayError - myPersistentHeadwayError) * (1 - sqrt(1 - pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentHeadwayError;
-        }
-    }
-
-    double headwayDistancePrecision = myMinDistanceNoiseHeadway;
-    double headwaySpeedPrecision = myMinSpeedNoiseHeadway;
-    // distance precision (noise)
-    if (trueGap > myOptimalPerceptionRange) {
-        headwayDistancePrecision = myMinDistanceNoiseHeadway + myDistanceNoiseHeadwayCoeff*(trueGap - myOptimalPerceptionRange);
-    }
-    // speed precision (noise)
-    if (speed > myOptimalSpeedRange) {
-        headwaySpeedPrecision = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (speed - myOptimalSpeedRange);
-    }
-    double auxW = myParam2 * myError.getState();
-    double auxWtrans = (2 / (1+exp(-auxW))) - 1;
-    double headwayPrecision = headwayDistancePrecision + headwaySpeedPrecision;
-   
-    const double perceivedHeadway = trueGap + headwayAccuracy + (myParam1*auxWtrans*headwayPrecision);
-        return perceivedHeadway;
-}
-
-void
-MSSimplePerIvan::updateAssumedGaps() {
-    for (auto& p : myAssumedGap) {
-        const void* objID = p.first;
-        const auto speedDiff = myLastPerceivedSpeedDifference.find(objID);
-        double assumedSpeedDiff;
-        if (speedDiff != myLastPerceivedSpeedDifference.end()) {
-            // update the assumed gap with the last perceived speed difference
-            assumedSpeedDiff = speedDiff->second;
+    else {
+        if (perceivedSpeedDifference->second > 1.2 * trueSpeedDifference || perceivedSpeedDifference->second < 0.8 * trueSpeedDifference) {
+            return trueSpeedDifference;
         }
         else {
-            // Assume the object is not moving, if no perceived speed difference is known.
-            assumedSpeedDiff = -myVehicle->getSpeed();
+            return perceivedSpeedDifference->second;
         }
-        p.second += SPEED2DIST(assumedSpeedDiff);
     }
 }
-
-double
-MSSimplePerIvan::getPerceivedSpeedDifference(const double trueSpeedDifference, const double trueGap, const double speed, const void* objID) {
-    double deltaVAccuracy = 0;
-
-    if (trueGap <= myOptimalPerceptionRange) {
-        deltaVAccuracy = myPersistentDeltaVError;
-    }
-    else if (trueGap <= myMaximalPerceptionRange) {
-        if (myDeltaVErrorShape == 1.0) { //linear
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * ((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)) + myPersistentDeltaVError;
-        }
-        else if (myDeltaVErrorShape == 2.0) { //quadratic
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2) + myPersistentDeltaVError;
-        }
-        else if (myDeltaVErrorShape == 3.0) { //ellipse
-            deltaVAccuracy = (myMaxDeltaVError - myPersistentDeltaVError) * (1 - sqrt(1 - pow(((trueGap - myOptimalPerceptionRange) / (myMaximalPerceptionRange - myOptimalPerceptionRange)), 2))) + myPersistentDeltaVError;
-        }
-    }
-
-    double deltaVDistancePrecision = myMinDistanceNoiseDeltaV;
-    double deltaVSpeedPrecision = myMinSpeedNoiseDeltaV;
-    // distance precision (noise)
-    if (trueGap > myOptimalPerceptionRange) {
-        deltaVDistancePrecision = myMinDistanceNoiseDeltaV + myDistanceNoiseDeltaVCoeff * (trueGap - myOptimalPerceptionRange);
-    }
-    // speed precision (noise)
-    if (speed > myOptimalSpeedRange) {
-        deltaVSpeedPrecision = myMinSpeedNoiseDeltaV + mySpeedNoiseDeltaVCoeff * (speed - myOptimalSpeedRange);
-    }
-
-    double deltaVPrecision = deltaVDistancePrecision + deltaVSpeedPrecision;
-
-    const double perceivedDeltaV = trueSpeedDifference + deltaVAccuracy + myParam1 * myError.getState() * deltaVPrecision;
-    return perceivedDeltaV;
-}
-
-
-
 
 /****************************************************************************/

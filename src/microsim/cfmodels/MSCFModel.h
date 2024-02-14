@@ -674,7 +674,7 @@ protected:
      * @param[in] speed The vehicle's speed
      * @param[in, out] gap The (netto) distance to the the obstacle
      */
-    void applyHeadwayPerceptionError(const MSVehicle* const veh, double speed, double& gap) const;
+    void applyHeadwayPerceptionError(const MSVehicle* const veh, double speed, double& gap, const MSVehicle* const pred=nullptr) const;
 
 
 protected:
