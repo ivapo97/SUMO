@@ -256,8 +256,8 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
 #ifdef DEBUG_DSDEVICE
     std::cout << "MSDevice_PerIvan::getParameter(key=" << key << ")" << std::endl;
 #endif
-    if (key == "errorState") {
-        return toString(myPerIvan->getErrorState());
+    if (key == "WienerProcessState") {
+        return toString(myPerIvan->getWienerProcessState());
     }
     else if (key == "errorTimeScale") {
         return toString(myPerIvan->getErrorTimeScale());
@@ -316,8 +316,8 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
 
 void
 MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value) {
-    if (key == "errorState") {
-        myPerIvan->setErrorState(StringUtils::toDouble(value));
+    if (key == "WienerProcessState") {
+        myPerIvan->setWienerProcessState(StringUtils::toDouble(value));
     }
     else if (key == "errorTimeScale") {
         myPerIvan->setErrorTimeScale(StringUtils::toDouble(value));

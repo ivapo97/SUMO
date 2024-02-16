@@ -86,7 +86,7 @@ public:
         return myPerceptionDelay;
     }
     inline double getErrorTimeScale() const {
-        return myError.getTimeScale();
+        return myWienerProcess.getTimeScale();
     }
     inline double getMinDistanceError() const {
         return myMinDistanceError;
@@ -130,8 +130,8 @@ public:
     inline double getActionStepLength() const {
         return myActionStepLength;
     }
-    inline double getErrorState() const {
-        return myError.getState();
+    inline double getWienerProcessState() const {
+        return myWienerProcess.getState();
     };
     ///@}
 
@@ -184,15 +184,15 @@ public:
         myOriginalReactionTime = value;
         updateReactionTime();
     }
-    inline void setErrorState(const double state) {
-        myError.setState(state);
+    inline void setWienerProcessState(const double state) {
+        myWienerProcess.setState(state);
     };
     inline void setErrorTimeScale(const double value) {
-        myError.setTimeScale(value);
+        myWienerProcess.setTimeScale(value);
     }
     ///@}
 
-    /// @brief Trigger updates for the errorProcess, assumed gaps, etc
+    /// @brief Trigger updates for the wiener process and reaction + delay
     void update();
 
     /// @brief This method checks whether the errorneous speed difference that would be perceived for this step
@@ -217,16 +217,16 @@ public:
 private:
     // @brief Update the current step duration
     void updateStepDuration();
-    // Update the error process
-    void updateError();
+    // Update the Wiener process
+    void updateWienerProcess();
     // Update the reaction time (actionStepLength)
     void updateReactionTime();
 
 private:
     /// @brief Vehicle corresponding to this per ivan
     MSVehicle* myVehicle;
-    /// @brief Driver's 'error',
-    WienerProcess myError;
+    /// @brief Vehicle's WienerProcess
+    WienerProcess myWienerProcess;
     /// @brief Coefficient controlling the impact of awareness on the time scale of the error process
     double myTimeCorrelationWindow;
     /// @brief Perception delay

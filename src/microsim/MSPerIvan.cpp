@@ -91,7 +91,7 @@ WienerProcess::getState() const {
 
 MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myVehicle(veh),
-    myError(0., 25.),
+    myWienerProcess(0., 25.),
     myTimeCorrelationWindow(PerIvanDefaults::timeCorrelationWindow),
     myPerceptionDelay(PerIvanDefaults::perceptionDelay),
     myMinDistanceError(PerIvanDefaults::minDistanceError),  
@@ -110,7 +110,7 @@ MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myStepDuration(TS),
     myLastUpdateTime(SIMTIME - TS),
     myDebugLock(false) {
-    updateError();
+    updateWienerProcess();
     updateReactionTime();
 }
 
@@ -118,8 +118,8 @@ void
 MSSimplePerIvan::update() {
     // Adapt step duration
     updateStepDuration();
-    // Update error
-    updateError();
+    // Update wiener process
+    updateWienerProcess();
     // Update actionStepLength, aka reaction time
     updateReactionTime();
 }
@@ -131,9 +131,9 @@ MSSimplePerIvan::updateStepDuration() {
 }
 
 void
-MSSimplePerIvan::updateError() {
-    myError.setTimeScale(myTimeCorrelationWindow);
-    myError.step(myStepDuration);
+MSSimplePerIvan::updateWienerProcess() {
+    myWienerProcess.setTimeScale(myTimeCorrelationWindow);
+    myWienerProcess.step(myStepDuration);
 }
 
 void
@@ -162,7 +162,7 @@ MSSimplePerIvan::getPerceivedDistance(const double trueDistance, const double sp
     if (speed > myOptimalPerceptionSpeed) {
         precisionSpeed = myMinSpeedPrecision + mySpeedPrecisionCoeff * (speed - myOptimalPerceptionSpeed);
     }
-    double auxW = myError.getState();
+    double auxW = myWienerProcess.getState();
     double auxWtrans = (2 / (1+exp(-auxW))) - 1;
     double precision = precisionDistance + precisionSpeed;   
     const double perceivedDistance = trueDistance + accuracy + (auxWtrans*precision);
