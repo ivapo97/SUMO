@@ -210,7 +210,7 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
                 RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DRIVERSTATE), OUProcess::getRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_PERIVAN)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_PERIVAN), OUProcessIV::getRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_PERIVAN), WienerProcess::getRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_DEVICE_TOC)) {
                 RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEVICE_TOC), MSDevice_ToC::getResponseTimeRNG());
@@ -504,7 +504,7 @@ MSStateHandler::saveRNGs(OutputDevice& out) {
     out.writeAttr(SUMO_ATTR_RNG_DEVICE, RandHelper::saveState(MSDevice::getEquipmentRNG()));
     out.writeAttr(SUMO_ATTR_RNG_DEVICE_BT, RandHelper::saveState(MSDevice_BTreceiver::getRNG()));
     out.writeAttr(SUMO_ATTR_RNG_DRIVERSTATE, RandHelper::saveState(OUProcess::getRNG()));
-    out.writeAttr(SUMO_ATTR_RNG_PERIVAN, RandHelper::saveState(OUProcessIV::getRNG()));
+    out.writeAttr(SUMO_ATTR_RNG_PERIVAN, RandHelper::saveState(WienerProcess::getRNG()));
     out.writeAttr(SUMO_ATTR_RNG_DEVICE_TOC, RandHelper::saveState(MSDevice_ToC::getResponseTimeRNG()));
     MSLane::saveRNGStates(out);
     out.closeTag();

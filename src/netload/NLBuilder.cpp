@@ -361,7 +361,7 @@ NLBuilder::initRandomness() {
     RandHelper::initRandGlobal(MSRouteHandler::getParsingRNG());
     RandHelper::initRandGlobal(MSDevice::getEquipmentRNG());
     RandHelper::initRandGlobal(OUProcess::getRNG());
-    RandHelper::initRandGlobal(OUProcessIV::getRNG());
+    RandHelper::initRandGlobal(WienerProcess::getRNG());
     RandHelper::initRandGlobal(MSDevice_ToC::getResponseTimeRNG());
     RandHelper::initRandGlobal(MSDevice_BTreceiver::getRecognitionRNG());
     MSLane::initRNGs(OptionsCont::getOptions());

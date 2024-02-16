@@ -30,32 +30,25 @@
 // ===========================================================================
 // class definitions
 // ===========================================================================
-/// @class OUProcessIV
+/// @class WienerProcess
 /// @brief An Ornstein-Uhlenbeck stochastic process
-class OUProcessIV {
+class WienerProcess {
 public:
     /// @brief constructor
-    OUProcessIV(double initialState, double timeScale, double noiseIntensity);
+    WienerProcess(double initialState, double timeScale);
     /// @brief destructor
-    ~OUProcessIV();
+    ~WienerProcess();
     /// @brief evolve for a time step of length dt.
     void step(double dt);
     /// @brief static version of the step()
-    static double step(double state, double dt, double timeScale, double noiseIntensity);
+    static double step(double state, double dt, double timeScale);
     /// @brief set the process' timescale to a new value
     void setTimeScale(double timeScale) {
         myTimeScale = timeScale;
     };
-    /// @brief set the process' noise intensity to a new value
-    void setNoiseIntensity(double noiseIntensity) {
-        myNoiseIntensity = noiseIntensity;
-    };
     /// @brief set the process' state to a new value
     void setState(double state) {
         myState = state;
-    };
-    inline double getNoiseIntensity() const {
-        return myNoiseIntensity;
     };
     inline double getTimeScale() const {
         return myTimeScale;
@@ -72,8 +65,6 @@ private:
     double myState;
     /// @brief The time scale of the process
     double myTimeScale;
-    /// @brief The noise intensity of the process
-    double myNoiseIntensity;
     /// @brief Random generator for OUProcessIVes
     static SumoRNG myRNG;
 };
@@ -88,95 +79,50 @@ public:
 
     /// @name Getter methods
     ///@{
-    inline double getErrorTimeScaleCoefficient() const {
-        return myErrorTimeScaleCoefficient;
+    inline double getTimeCorrelationWindow() const {
+        return myTimeCorrelationWindow;
     }
     inline double getPerceptionDelay() const {
         return myPerceptionDelay;
     }
-    inline double getErrorNoiseIntensityCoefficient() const {
-        return myErrorNoiseIntensityCoefficient;
-    }
     inline double getErrorTimeScale() const {
         return myError.getTimeScale();
     }
-    inline double getErrorNoiseIntensity() const {
-        return myError.getNoiseIntensity();
+    inline double getMinDistanceError() const {
+        return myMinDistanceError;
     }
-    inline double getSpeedDifferenceErrorCoefficient() const {
-        return mySpeedDifferenceErrorCoefficient;
-    }
-    inline double getHeadwayErrorCoefficient() const {
-        return myHeadwayErrorCoefficient;
-    }
-    inline double getPersistentHeadwayError() const {
-        return myPersistentHeadwayError;
-    }
-    inline double getOptimalPerceptionRange() const {
-        return myOptimalPerceptionRange;
+    inline double getOptimalPerceptionDistance() const {
+        return myOptimalPerceptionDistance;
     }  
-    inline double getMaximalPerceptionRange() const {
-        return myMaximalPerceptionRange;
+    inline double getMaximalPerceptionDistance() const {
+        return myMaximalPerceptionDistance;
     }   
-    inline double getMaxHeadwayError() const {
-        return myMaxHeadwayError;
+    inline double getMaxDistanceError() const {
+        return myMaxDistanceError;
     }
-    inline double getHeadwayErrorShape() const {
-        return myHeadwayErrorShape;
+    inline double getDistanceErrorShape() const {
+        return myDistanceErrorShape;
     }
-    inline double getMinDistanceNoiseHeadway() const {
-        return myMinDistanceNoiseHeadway;
+    inline double getMinDistancePrecision() const {
+        return myMinDistancePrecision;
     }
-    inline double getMinSpeedNoiseHeadway() const {
-        return myMinSpeedNoiseHeadway;
+    inline double getMinSpeedPrecision() const {
+        return myMinSpeedPrecision;
     }
-    inline double getDistanceNoiseHeadwayCoeff() const {
-        return myDistanceNoiseHeadwayCoeff;
+    inline double getDistancePrecisionCoeff() const {
+        return myDistancePrecisionCoeff;
     }
-    inline double getSpeedNoiseHeadwayCoeff() const {
-        return mySpeedNoiseHeadwayCoeff;
+    inline double getSpeedPrecisionCoeff() const {
+        return mySpeedPrecisionCoeff;
     }
-    inline double getOptimalSpeedRange() const {
-        return myOptimalSpeedRange;
-    }
-    inline double getPersistentDeltaVError() const {
-        return myPersistentDeltaVError;
-    }
-    inline double getMaxDeltaVError() const {
-        return myMaxDeltaVError;
-    }
-    inline double getDeltaVErrorShape() const {
-        return myDeltaVErrorShape;
-    }
-    inline double getMinDistanceNoiseDeltaV() const {
-        return myMinDistanceNoiseDeltaV;
-    }
-    inline double getMinSpeedNoiseDeltaV() const {
-        return myMinSpeedNoiseDeltaV;
-    }
-    inline double getDistanceNoiseDeltaVCoeff() const {
-        return myDistanceNoiseDeltaVCoeff;
-    }
-    inline double getSpeedNoiseDeltaVCoeff() const {
-        return mySpeedNoiseDeltaVCoeff;
+    inline double getOptimalPerceptionSpeed() const {
+        return myOptimalPerceptionSpeed;
     }
     inline double getParam1() const {
         return myParam1;
     }
     inline double getParam2() const {
         return myParam2;
-    }
-    inline double getFreeSpeedErrorCoefficient() const {
-        return myFreeSpeedErrorCoefficient;
-    }
-    inline double getSpeedDifferenceChangePerceptionThreshold() const {
-        return mySpeedDifferenceChangePerceptionThreshold;
-    }
-    inline double getHeadwayChangePerceptionThreshold() const {
-        return myHeadwayChangePerceptionThreshold;
-    }
-    inline double getMaximalReactionTime() const {
-        return myMaximalReactionTime;
     }
     inline double getOriginalReactionTime() const {
         return myOriginalReactionTime;
@@ -192,90 +138,47 @@ public:
 
     /// @name Setter methods
     ///@{
-    inline void setErrorTimeScaleCoefficient(const double value) {
-        myErrorTimeScaleCoefficient = value;
+    inline void setTimeCorrelationWindow(const double value) {
+        myTimeCorrelationWindow = value;
     }
     inline void setPerceptionDelay(const double value) {
         myPerceptionDelay = value;
     }
-    inline void setErrorNoiseIntensityCoefficient(const double value) {
-        myErrorNoiseIntensityCoefficient = value;
+    inline void setMinDistanceError(const double value) {
+        myMinDistanceError = value;
     }
-    inline void setSpeedDifferenceErrorCoefficient(const double value) {
-        mySpeedDifferenceErrorCoefficient = value;
+    inline void setOptimalPerceptionDistance(const double value) {
+        myOptimalPerceptionDistance = value;
     }
-    inline void setHeadwayErrorCoefficient(const double value) {
-        myHeadwayErrorCoefficient = value;
+    inline void setMaximalPerceptionDistance(const double value) {
+        myMaximalPerceptionDistance = value;
     }
-    inline void setPersistentHeadwayError(const double value) {
-        myPersistentHeadwayError = value;
-    }
-    inline void setOptimalPerceptionRange(const double value) {
-        myOptimalPerceptionRange = value;
-    }
-    inline void setMaximalPerceptionRange(const double value) {
-        myMaximalPerceptionRange = value;
-    }
-    inline void setMaxHeadwayError(const double value) {
-        myMaxHeadwayError = value;
+    inline void setMaxDistanceError(const double value) {
+        myMaxDistanceError = value;
     }    
-    inline void setHeadwayErrorShape(const double value) {
-        myHeadwayErrorShape = value;
+    inline void setDistanceErrorShape(const double value) {
+        myDistanceErrorShape = value;
     }
-    inline void setMinDistanceNoiseHeadway(const double value) {
-        myMinDistanceNoiseHeadway = value;
+    inline void setMinDistancePrecision(const double value) {
+        myMinDistancePrecision = value;
     }
-    inline void setMinSpeedNoiseHeadway(const double value) {
-        myMinSpeedNoiseHeadway = value;
+    inline void setMinSpeedPrecision(const double value) {
+        myMinSpeedPrecision = value;
     }
-    inline void setDistanceNoiseHeadwayCoeff(const double value) {
-        myDistanceNoiseHeadwayCoeff = value;
+    inline void setDistancePrecisionCoeff(const double value) {
+        myDistancePrecisionCoeff = value;
     }
-    inline void setSpeedNoiseHeadwayCoeff(const double value) {
-        mySpeedNoiseHeadwayCoeff = value;
+    inline void setSpeedPrecisionCoeff(const double value) {
+        mySpeedPrecisionCoeff = value;
     }
-    inline void setOptimalSpeedRange(const double value) {
-        myOptimalSpeedRange = value;
-    }
-    inline void setPersistentDeltaVError(const double value) {
-        myPersistentDeltaVError = value;
-    }
-    inline void setMaxDeltaVError(const double value) {
-        myMaxDeltaVError = value;
-    }
-    inline void setDeltaVErrorShape(const double value) {
-        myDeltaVErrorShape = value;
-    }
-    inline void setMinDistanceNoiseDeltaV(const double value) {
-        myMinDistanceNoiseDeltaV = value;
-    }
-    inline void setMinSpeedNoiseDeltaV(const double value) {
-        myMinSpeedNoiseDeltaV = value;
-    }
-    inline void setDistanceNoiseDeltaVCoeff(const double value) {
-        myDistanceNoiseDeltaVCoeff = value;
-    }
-    inline void setSpeedNoiseDeltaVCoeff(const double value) {
-        mySpeedNoiseDeltaVCoeff = value;
+    inline void setOptimalPerceptionSpeed(const double value) {
+        myOptimalPerceptionSpeed = value;
     }
     inline void setParam1(const double value) {
         myParam1 = value;
     }
     inline void setParam2(const double value) {
         myParam2 = value;
-    }
-    inline void setFreeSpeedErrorCoefficient(const double value) {
-        myFreeSpeedErrorCoefficient = value;
-    }
-    inline void setSpeedDifferenceChangePerceptionThreshold(const double value) {
-        mySpeedDifferenceChangePerceptionThreshold = value;
-    }
-    inline void setHeadwayChangePerceptionThreshold(const double value) {
-        myHeadwayChangePerceptionThreshold = value;
-    }
-    inline void setMaximalReactionTime(const double value) {
-        myMaximalReactionTime = value;
-        updateReactionTime();
     }
     inline void setOriginalReactionTime(const double value) {
         myOriginalReactionTime = value;
@@ -286,9 +189,6 @@ public:
     };
     inline void setErrorTimeScale(const double value) {
         myError.setTimeScale(value);
-    }
-    inline void setErrorNoiseIntensity(const double value) {
-        myError.setNoiseIntensity(value);
     }
     ///@}
 
@@ -326,70 +226,39 @@ private:
     /// @brief Vehicle corresponding to this per ivan
     MSVehicle* myVehicle;
     /// @brief Driver's 'error',
-    OUProcessIV myError;
+    WienerProcess myError;
     /// @brief Coefficient controlling the impact of awareness on the time scale of the error process
-    double myErrorTimeScaleCoefficient;
+    double myTimeCorrelationWindow;
     /// @brief Perception delay
     double myPerceptionDelay;
-    /// @brief Coefficient controlling the impact of awareness on the noise intensity of the error process
-    double myErrorNoiseIntensityCoefficient;
-    /// @brief Scaling coefficients for the magnitude of errors
-    double mySpeedDifferenceErrorCoefficient;
-    double myHeadwayErrorCoefficient;
-    double myFreeSpeedErrorCoefficient;
     /// @brief Persistent headway error
-    double myPersistentHeadwayError;
+    double myMinDistanceError;
     /// @brief Perception range without increase in errors
-    double myOptimalPerceptionRange;
+    double myOptimalPerceptionDistance;
     /// @brief Max. perception range
-    double myMaximalPerceptionRange;
+    double myMaximalPerceptionDistance;
     /// @brief Headway error at max. range
-    double myMaxHeadwayError;
+    double myMaxDistanceError;
     /// @brief Headway error function shape    
-    double myHeadwayErrorShape;
+    double myDistanceErrorShape;
     /// @brief Min. distance noise on headway   
-    double myMinDistanceNoiseHeadway;
+    double myMinDistancePrecision;
     /// @brief Min. speed noise on headway
-    double myMinSpeedNoiseHeadway;
+    double myMinSpeedPrecision;
     /// @brief Distance noise rate headway coefficient
-    double myDistanceNoiseHeadwayCoeff;
+    double myDistancePrecisionCoeff;
     /// @brief Speed noise rate headway coefficient
-    double mySpeedNoiseHeadwayCoeff;
+    double mySpeedPrecisionCoeff;
     /// @brief Speed range without increase in errors
-    double myOptimalSpeedRange;
-    /// @brief Persistent deltaV error
-    double myPersistentDeltaVError;
-    /// @brief DeltaV error at max. range
-    double myMaxDeltaVError;
-    /// @brief Delta V error function shape
-    double myDeltaVErrorShape;
-    /// @brief Min. distance noise on deltaV
-    double myMinDistanceNoiseDeltaV;
-    /// @brief Min. speed noise on deltaV
-    double myMinSpeedNoiseDeltaV;
-    /// @brief Distance noise rate deltaV coefficient
-    double myDistanceNoiseDeltaVCoeff;
-    /// @brief Speed noise rate deltaV coefficient
-    double mySpeedNoiseDeltaVCoeff;
-    /// @brief Calibration parameter scale precision
+    double myOptimalPerceptionSpeed;
+    /// @brief Auxiliary calibration parameter 1
     double myParam1;
-    /// @brief Calibration parameter scale wiener process
+    /// @brief Auxiliary calibration parameter 2
     double myParam2;
-
-    /// @brief Thresholds above a change in the corresponding quantity is perceived.
-    /// @note  In the comparison, we multiply the actual change amount by the current
-    ///       gap to the object to reflect a more precise perception if the object is closer.
-    double myHeadwayChangePerceptionThreshold;
-    double mySpeedDifferenceChangePerceptionThreshold;
-
-        /// @brief Action step length (~current maximal reaction time) induced by awareness level
-        /// @note  This interpolates linearly from myOriginalReactionTime for awareness==1
-        ///        to myMaximalReactionTime for awareness==myMinAwareness
+    /// @brief Action step length (reaction time+perception delay)
     double myActionStepLength;
     /// @brief Maximal reaction time (value set for the actionStepLength at awareness=1)
     double myOriginalReactionTime;
-    /// @brief Maximal reaction time (value set for the actionStepLength at awareness=myMinAwareness)
-    double myMaximalReactionTime;
 
     /// @name Variables for tracking update instants
     /// @see updateStepDuration()
@@ -410,35 +279,20 @@ private:
     bool myDebugLock;
 };
 
-
 /// @brief Default values for the MSPerIvan parameters
 struct PerIvanDefaults {
-    static double errorTimeScaleCoefficient;
+    static double timeCorrelationWindow;
     static double perceptionDelay;
-    static double errorNoiseIntensityCoefficient;
-    static double speedDifferenceErrorCoefficient;
-    static double speedDifferenceChangePerceptionThreshold;
-    static double headwayChangePerceptionThreshold;
-    static double headwayErrorCoefficient;
-    static double persistentHeadwayError;
-    static double optimalPerceptionRange;
-    static double maximalPerceptionRange;
-    static double maxHeadwayError;
-    static double headwayErrorShape;
-    static double minDistanceNoiseHeadway;
-    static double minSpeedNoiseHeadway;
-    static double distanceNoiseHeadwayCoeff;
-    static double speedNoiseHeadwayCoeff;
-    static double optimalSpeedRange;
-    static double persistentDeltaVError;
-    static double maxDeltaVError;
-    static double deltaVErrorShape;
-    static double minDistanceNoiseDeltaV;
-    static double minSpeedNoiseDeltaV;
-    static double distanceNoiseDeltaVCoeff;
-    static double speedNoiseDeltaVCoeff;
+    static double minDistanceError;
+    static double optimalPerceptionDistance;
+    static double maximalPerceptionDistance;
+    static double maxDistanceError;
+    static double distanceErrorShape;
+    static double minDistancePrecision;
+    static double minSpeedPrecision;
+    static double distancePrecisionCoeff;
+    static double speedPrecisionCoeff;
+    static double optimalPerceptionSpeed;
     static double param1;
     static double param2;
-    static double freeSpeedErrorCoefficient;
-    static double maximalReactionTimeFactor;
 };

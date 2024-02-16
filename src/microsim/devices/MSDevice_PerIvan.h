@@ -77,34 +77,20 @@ public:
 private:
     /// @name Helpers for parameter parsing
     /// @{
-    static double getErrorTimeScaleCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getTimeCorrelationWindow(const SUMOVehicle& v, const OptionsCont& oc);
     static double getPerceptionDelay(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getErrorNoiseIntensityCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getSpeedDifferenceErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getSpeedDifferenceChangePerceptionThreshold(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getHeadwayChangePerceptionThreshold(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getHeadwayErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getPersistentHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);  
-    static double getOptimalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc); 
-    static double getMaximalPerceptionRange(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMaxHeadwayError(const SUMOVehicle& v, const OptionsCont& oc);    
-    static double getHeadwayErrorShape(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMinDistanceNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMinSpeedNoiseHeadway(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getDistanceNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getSpeedNoiseHeadwayCoeff(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getOptimalSpeedRange(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getPersistentDeltaVError(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMaxDeltaVError(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getDeltaVErrorShape(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMinDistanceNoiseDeltaV(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMinSpeedNoiseDeltaV(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getDistanceNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getSpeedNoiseDeltaVCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinDistanceError(const SUMOVehicle& v, const OptionsCont& oc);  
+    static double getOptimalPerceptionDistance(const SUMOVehicle& v, const OptionsCont& oc); 
+    static double getMaximalPerceptionDistance(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMaxDistanceError(const SUMOVehicle& v, const OptionsCont& oc);    
+    static double getDistanceErrorShape(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinDistancePrecision(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getMinSpeedPrecision(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getDistancePrecisionCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getSpeedPrecisionCoeff(const SUMOVehicle& v, const OptionsCont& oc);
+    static double getOptimalPerceptionSpeed(const SUMOVehicle& v, const OptionsCont& oc);
     static double getParam1(const SUMOVehicle& v, const OptionsCont& oc);
     static double getParam2(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getFreeSpeedErrorCoefficient(const SUMOVehicle& v, const OptionsCont& oc);
-    static double getMaximalReactionTime(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
 
 
@@ -131,34 +117,20 @@ private:
      * @param[in] id The ID of the device
      */
     MSDevice_PerIvan(SUMOVehicle& holder, const std::string& id,
-        double errorTimeScaleCoefficient,
+        double timeCorrelationWindow,
         double perceptionDelay,
-        double errorNoiseIntensityCoefficient,
-        double speedDifferenceErrorCoefficient,
-        double speedDifferenceChangePerceptionThreshold,
-        double headwayChangePerceptionThreshold,
-        double headwayErrorCoefficient,
-        double persistentHeadwayError,
-        double optimalPerceptionRange,
-        double maximalPerceptionRange,
-        double maxHeadwayError,
-        double headwayErrorShape,
-        double minDistanceNoiseHeadway,
-        double minSpeedNoiseHeadway,
-        double distanceNoiseHeadwayCoeff,
-        double speedNoiseHeadwayCoeff,
-        double optimalSpeedRange,
-        double persistentDeltaVError,
-        double maxDeltaVError,
-        double deltaVErrorShape,
-        double minDistanceNoiseDeltaV,
-        double minSpeedNoiseDeltaV,
-        double distanceNoiseDeltaVCoeff,
-        double speedNoiseDeltaVCoeff,
+        double minDistanceError,
+        double optimalPerceptionDistance,
+        double maximalPerceptionDistance,
+        double maxDistanceError,
+        double distanceErrorShape,
+        double minDistancePrecision,
+        double minSpeedPrecision,
+        double distancePrecisionCoeff,
+        double speedPrecisionCoeff,
+        double optimalPerceptionSpeed,
         double param1,
-        double param2,
-        double freeSpeedErrorCoefficient,
-        double maximalReactionTime);
+        double param2);
 
     /// @brief Initializeses the per ivan parameters
     void initPerIvan();
@@ -170,34 +142,20 @@ private:
     /// @name Temporary to hold perivan parameters until initialization.
     /// @note Invalid after call to initPerIvan().
     /// @{
-    double myErrorTimeScaleCoefficient;
+    double myTimeCorrelationWindow;
     double myPerceptionDelay;
-    double myErrorNoiseIntensityCoefficient;
-    double mySpeedDifferenceErrorCoefficient;
-    double mySpeedDifferenceChangePerceptionThreshold;
-    double myHeadwayChangePerceptionThreshold;
-    double myHeadwayErrorCoefficient;
-    double myPersistentHeadwayError;
-    double myOptimalPerceptionRange;
-    double myMaximalPerceptionRange;
-    double myMaxHeadwayError;
-    double myHeadwayErrorShape;
-    double myMinDistanceNoiseHeadway;
-    double myMinSpeedNoiseHeadway;
-    double myDistanceNoiseHeadwayCoeff;
-    double mySpeedNoiseHeadwayCoeff;
-    double myOptimalSpeedRange;
-    double myPersistentDeltaVError;
-    double myMaxDeltaVError;
-    double myDeltaVErrorShape;
-    double myMinDistanceNoiseDeltaV;
-    double myMinSpeedNoiseDeltaV;
-    double myDistanceNoiseDeltaVCoeff;
-    double mySpeedNoiseDeltaVCoeff;
+    double myMinDistanceError;
+    double myOptimalPerceptionDistance;
+    double myMaximalPerceptionDistance;
+    double myMaxDistanceError;
+    double myDistanceErrorShape;
+    double myMinDistancePrecision;
+    double myMinSpeedPrecision;
+    double myDistancePrecisionCoeff;
+    double mySpeedPrecisionCoeff;
+    double myOptimalPerceptionSpeed;
     double myParam1;
     double myParam2;
-    double myFreeSpeedErrorCoefficient;
-    double myMaximalReactionTime;
     /// @}
 
     /// @brief The per ivan of the holder.

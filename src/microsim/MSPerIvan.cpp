@@ -38,114 +38,75 @@
 // ===========================================================================
 // DEBUG constants
 // ===========================================================================
-//#define DEBUG_OUPROCESS
-//#define DEBUG_TRAFFIC_ITEMS
-//#define DEBUG_PERCEPTION_ERRORS
-//#define DEBUG_DRIVERSTATE
-//#define DEBUG_COND (true)
-//#define DEBUG_COND (myVehicle->isSelected())
-
 
 /* -------------------------------------------------------------------------
  * static member definitions
  * ----------------------------------------------------------------------- */
- // hash function
- //std::hash<std::string> MSPerIvan::MSTrafficItem::hash = std::hash<std::string>();
-SumoRNG OUProcessIV::myRNG("perivan");
+SumoRNG WienerProcess::myRNG("perivan");
 
 // ===========================================================================
 // Default value definitions
 // ===========================================================================
 
-double PerIvanDefaults::errorTimeScaleCoefficient = 25.0;
+double PerIvanDefaults::timeCorrelationWindow = 25.0;
 double PerIvanDefaults::perceptionDelay = 0.0;
-double PerIvanDefaults::errorNoiseIntensityCoefficient = 0.2;
-double PerIvanDefaults::speedDifferenceErrorCoefficient = 0.15;
-double PerIvanDefaults::headwayErrorCoefficient = 0.75;
-double PerIvanDefaults::persistentHeadwayError = 0.0;
-double PerIvanDefaults::optimalPerceptionRange = 50.0;
-double PerIvanDefaults::maximalPerceptionRange = 150.0;
-double PerIvanDefaults::maxHeadwayError = 5.0;
-double PerIvanDefaults::headwayErrorShape = 1.0;
-double PerIvanDefaults::minDistanceNoiseHeadway = 0.1;
-double PerIvanDefaults::minSpeedNoiseHeadway = 0.1;
-double PerIvanDefaults::distanceNoiseHeadwayCoeff = 0.001;
-double PerIvanDefaults::speedNoiseHeadwayCoeff = 0.001;
-double PerIvanDefaults::optimalSpeedRange = 10.0;
-double PerIvanDefaults::persistentDeltaVError = 0.1;
-double PerIvanDefaults::maxDeltaVError = 0.5;
-double PerIvanDefaults::deltaVErrorShape = 1.0;
-double PerIvanDefaults::minDistanceNoiseDeltaV = 0.1;
-double PerIvanDefaults::minSpeedNoiseDeltaV = 0.1;
-double PerIvanDefaults::distanceNoiseDeltaVCoeff = 0.001;
-double PerIvanDefaults::speedNoiseDeltaVCoeff = 0.001;
+double PerIvanDefaults::minDistanceError = 0.0;
+double PerIvanDefaults::optimalPerceptionDistance = 50.0;
+double PerIvanDefaults::maximalPerceptionDistance = 150.0;
+double PerIvanDefaults::maxDistanceError = 5.0;
+double PerIvanDefaults::distanceErrorShape = 1.0;
+double PerIvanDefaults::minDistancePrecision = 0.1;
+double PerIvanDefaults::minSpeedPrecision = 0.1;
+double PerIvanDefaults::distancePrecisionCoeff = 0.001;
+double PerIvanDefaults::speedPrecisionCoeff = 0.001;
+double PerIvanDefaults::optimalPerceptionSpeed = 10.0;
 double PerIvanDefaults::param1 = 1.0;
 double PerIvanDefaults::param2 = 1.0;
-double PerIvanDefaults::freeSpeedErrorCoefficient = 0.0;
-double PerIvanDefaults::speedDifferenceChangePerceptionThreshold = 0.1;
-double PerIvanDefaults::headwayChangePerceptionThreshold = 0.1;
-double PerIvanDefaults::maximalReactionTimeFactor = 1.0;
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 
-OUProcessIV::OUProcessIV(double initialState, double timeScale, double noiseIntensity)
+WienerProcess::WienerProcess(double initialState, double timeScale)
     : myState(initialState),
-      myTimeScale(timeScale),
-      myNoiseIntensity(noiseIntensity) {}
+    myTimeScale(timeScale) {}
 
-OUProcessIV::~OUProcessIV() {}
+WienerProcess::~WienerProcess() {}
 
 void
-OUProcessIV::step(double dt) {
-    myState = exp(-dt / myTimeScale) * myState + myNoiseIntensity * sqrt(2 * dt / myTimeScale) * RandHelper::randNorm(0, 1, &myRNG);
+WienerProcess::step(double dt) {
+    myState = exp(-dt / myTimeScale) * myState + sqrt(2 * dt / myTimeScale) * RandHelper::randNorm(0, 1, &myRNG);
 }
 
 double
-OUProcessIV::step(double state, double dt, double timeScale, double noiseIntensity) {
+WienerProcess::step(double state, double dt, double timeScale) {
     /// see above
-    return exp(-dt / timeScale) * state + noiseIntensity * sqrt(2 * dt / timeScale) * RandHelper::randNorm(0, 1, &myRNG);
+    return exp(-dt / timeScale) * state + sqrt(2 * dt / timeScale) * RandHelper::randNorm(0, 1, &myRNG);
 }
 
 double
-OUProcessIV::getState() const {
+WienerProcess::getState() const {
     return myState;
 }
 
 MSSimplePerIvan::MSSimplePerIvan(MSVehicle* veh) :
     myVehicle(veh),
-    myError(0., 1., 1.),
-    myErrorTimeScaleCoefficient(PerIvanDefaults::errorTimeScaleCoefficient),
+    myError(0., 25.),
+    myTimeCorrelationWindow(PerIvanDefaults::timeCorrelationWindow),
     myPerceptionDelay(PerIvanDefaults::perceptionDelay),
-    myErrorNoiseIntensityCoefficient(PerIvanDefaults::errorNoiseIntensityCoefficient),
-    mySpeedDifferenceErrorCoefficient(PerIvanDefaults::speedDifferenceErrorCoefficient),
-    myHeadwayErrorCoefficient(PerIvanDefaults::headwayErrorCoefficient),
-    myPersistentHeadwayError(PerIvanDefaults::persistentHeadwayError),  
-    myOptimalPerceptionRange(PerIvanDefaults::optimalPerceptionRange),
-    myMaximalPerceptionRange(PerIvanDefaults::maximalPerceptionRange),
-    myMaxHeadwayError(PerIvanDefaults::maxHeadwayError),  
-    myHeadwayErrorShape(PerIvanDefaults::headwayErrorShape),
-    myMinDistanceNoiseHeadway(PerIvanDefaults::minDistanceNoiseHeadway),
-    myMinSpeedNoiseHeadway(PerIvanDefaults::minSpeedNoiseHeadway),
-    myDistanceNoiseHeadwayCoeff(PerIvanDefaults::distanceNoiseHeadwayCoeff),
-    mySpeedNoiseHeadwayCoeff(PerIvanDefaults::speedNoiseHeadwayCoeff),
-    myOptimalSpeedRange(PerIvanDefaults::optimalSpeedRange),
-    myPersistentDeltaVError(PerIvanDefaults::persistentDeltaVError),
-    myMaxDeltaVError(PerIvanDefaults::maxDeltaVError),
-    myDeltaVErrorShape(PerIvanDefaults::deltaVErrorShape),
-    myMinDistanceNoiseDeltaV(PerIvanDefaults::minDistanceNoiseDeltaV),
-    myMinSpeedNoiseDeltaV(PerIvanDefaults::minSpeedNoiseDeltaV),
-    myDistanceNoiseDeltaVCoeff(PerIvanDefaults::distanceNoiseDeltaVCoeff),
-    mySpeedNoiseDeltaVCoeff(PerIvanDefaults::speedNoiseDeltaVCoeff),
+    myMinDistanceError(PerIvanDefaults::minDistanceError),  
+    myOptimalPerceptionDistance(PerIvanDefaults::optimalPerceptionDistance),
+    myMaximalPerceptionDistance(PerIvanDefaults::maximalPerceptionDistance),
+    myMaxDistanceError(PerIvanDefaults::maxDistanceError),  
+    myDistanceErrorShape(PerIvanDefaults::distanceErrorShape),
+    myMinDistancePrecision(PerIvanDefaults::minDistancePrecision),
+    myMinSpeedPrecision(PerIvanDefaults::minSpeedPrecision),
+    myDistancePrecisionCoeff(PerIvanDefaults::distancePrecisionCoeff),
+    mySpeedPrecisionCoeff(PerIvanDefaults::speedPrecisionCoeff),
+    myOptimalPerceptionSpeed(PerIvanDefaults::optimalPerceptionSpeed),
     myParam1(PerIvanDefaults::param1),
     myParam2(PerIvanDefaults::param2),
-    myFreeSpeedErrorCoefficient(PerIvanDefaults::freeSpeedErrorCoefficient),
-    myHeadwayChangePerceptionThreshold(PerIvanDefaults::headwayChangePerceptionThreshold),
-    mySpeedDifferenceChangePerceptionThreshold(PerIvanDefaults::speedDifferenceChangePerceptionThreshold),
     myOriginalReactionTime(veh->getActionStepLengthSecs()),
-    myMaximalReactionTime(PerIvanDefaults::maximalReactionTimeFactor* myOriginalReactionTime),
     myStepDuration(TS),
     myLastUpdateTime(SIMTIME - TS),
     myDebugLock(false) {
@@ -171,8 +132,7 @@ MSSimplePerIvan::updateStepDuration() {
 
 void
 MSSimplePerIvan::updateError() {
-    myError.setTimeScale(myErrorTimeScaleCoefficient);
-    myError.setNoiseIntensity(myErrorNoiseIntensityCoefficient);
+    myError.setTimeScale(myTimeCorrelationWindow);
     myError.step(myStepDuration);
 }
 
@@ -183,24 +143,24 @@ MSSimplePerIvan::updateReactionTime() {
 
 double
 MSSimplePerIvan::getPerceivedDistance(const double trueDistance, const double speed, const void* objID) {
-    double accuracy = 500 * myMaximalPerceptionRange;
+    double accuracy = 500 * myMaximalPerceptionDistance;
     //this means that if the vehicle is beyond my range, then i assign a very large error.
-    double precisionDistance = myMinDistanceNoiseHeadway;
-    double precisionSpeed = myMinSpeedNoiseHeadway;
+    double precisionDistance = myMinDistancePrecision;
+    double precisionSpeed = myMinSpeedPrecision;
     
-    if (trueDistance <= myOptimalPerceptionRange) {
-        accuracy = myPersistentHeadwayError;
+    if (trueDistance <= myOptimalPerceptionDistance) {
+        accuracy = myMinDistanceError;
     }
-    else if (trueDistance <= myMaximalPerceptionRange) {
-        accuracy = myPersistentHeadwayError + (((myMaxHeadwayError - myPersistentHeadwayError) / pow((myMaximalPerceptionRange - myOptimalPerceptionRange), myHeadwayErrorShape)) * pow((trueDistance - myOptimalPerceptionRange), myHeadwayErrorShape));
+    else if (trueDistance <= myMaximalPerceptionDistance) {
+        accuracy = myMinDistanceError + (((myMaxDistanceError - myMinDistanceError) / pow((myMaximalPerceptionDistance - myOptimalPerceptionDistance), myDistanceErrorShape)) * pow((trueDistance - myOptimalPerceptionDistance), myDistanceErrorShape));
     }
     // distance precision
-    if (trueDistance > myOptimalPerceptionRange) {
-        precisionDistance = myMinDistanceNoiseHeadway + myDistanceNoiseHeadwayCoeff*(trueDistance - myOptimalPerceptionRange);
+    if (trueDistance > myOptimalPerceptionDistance) {
+        precisionDistance = myMinDistancePrecision + myDistancePrecisionCoeff*(trueDistance - myOptimalPerceptionDistance);
     }
     // speed precision
-    if (speed > myOptimalSpeedRange) {
-        precisionSpeed = myMinSpeedNoiseHeadway + mySpeedNoiseHeadwayCoeff * (speed - myOptimalSpeedRange);
+    if (speed > myOptimalPerceptionSpeed) {
+        precisionSpeed = myMinSpeedPrecision + mySpeedPrecisionCoeff * (speed - myOptimalPerceptionSpeed);
     }
     double auxW = myError.getState();
     double auxWtrans = (2 / (1+exp(-auxW))) - 1;
