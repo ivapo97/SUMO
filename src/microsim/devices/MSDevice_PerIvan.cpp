@@ -67,29 +67,29 @@ MSDevice_PerIvan::insertOptions(OptionsCont& oc) {
     oc.doRegister("device.perivan.perceptionDelay", new Option_Float(PerIvanDefaults::perceptionDelay));
     oc.addDescription("device.perivan.perceptionDelay", TL("Per Ivan Device"), TL("Perception delay."));
     oc.doRegister("device.perivan.minDistanceError", new Option_Float(PerIvanDefaults::minDistanceError));
-    oc.addDescription("device.perivan.minDistanceError", TL("Per Ivan Device"), TL("Persistent headway error."));
+    oc.addDescription("device.perivan.minDistanceError", TL("Per Ivan Device"), TL("Persistent distance accuracy error."));
     oc.doRegister("device.perivan.optimalPerceptionDistance", new Option_Float(PerIvanDefaults::optimalPerceptionDistance));
-    oc.addDescription("device.perivan.optimalPerceptionDistance", TL("Per Ivan Device"), TL("Headway range without increase in errors."));
+    oc.addDescription("device.perivan.optimalPerceptionDistance", TL("Per Ivan Device"), TL("Distance range without decay in distance estimation accuracy."));
     oc.doRegister("device.perivan.maximalPerceptionDistance", new Option_Float(PerIvanDefaults::maximalPerceptionDistance));
-    oc.addDescription("device.perivan.maximalPerceptionDistance", TL("Per Ivan Device"), TL("Max. headway range."));
+    oc.addDescription("device.perivan.maximalPerceptionDistance", TL("Per Ivan Device"), TL("Max. perception disntance range."));
     oc.doRegister("device.perivan.maxDistanceError", new Option_Float(PerIvanDefaults::maxDistanceError));
-    oc.addDescription("device.perivan.maxDistanceError", TL("Per Ivan Device"), TL("Headway error at max. perception range."));  
+    oc.addDescription("device.perivan.maxDistanceError", TL("Per Ivan Device"), TL("Accuracy error at max. perception range."));  
     oc.doRegister("device.perivan.distanceErrorShape", new Option_Float(PerIvanDefaults::distanceErrorShape));
-    oc.addDescription("device.perivan.distanceErrorShape", TL("Per Ivan Device"), TL("Shape of headway error function - '1: linear','2: quadratic', or '3 :ellipse'")); 
+    oc.addDescription("device.perivan.distanceErrorShape", TL("Per Ivan Device"), TL("Distance error decay - '1: linear','2: quadratic', or '3 :ellipse'")); 
     oc.doRegister("device.perivan.minDistancePrecision", new Option_Float(PerIvanDefaults::minDistancePrecision));
-    oc.addDescription("device.perivan.minDistancePrecision", TL("Per Ivan Device"), TL("Min distance noise on headway."));
+    oc.addDescription("device.perivan.minDistancePrecision", TL("Per Ivan Device"), TL("Min (best) precision due to distance. "));
     oc.doRegister("device.perivan.minSpeedPrecision", new Option_Float(PerIvanDefaults::minSpeedPrecision));
-    oc.addDescription("device.perivan.minSpeedPrecision", TL("Per Ivan Device"), TL("Min speed noise on headway."));
+    oc.addDescription("device.perivan.minSpeedPrecision", TL("Per Ivan Device"), TL("Min (best) precision due to speed."));
     oc.doRegister("device.perivan.distancePrecisionCoeff", new Option_Float(PerIvanDefaults::distancePrecisionCoeff));
-    oc.addDescription("device.perivan.distancePrecisionCoeff", TL("Per Ivan Device"), TL("Distance noise rate coefficient on headway."));    
+    oc.addDescription("device.perivan.distancePrecisionCoeff", TL("Per Ivan Device"), TL("Precision rate decrease due to distance."));    
     oc.doRegister("device.perivan.speedPrecisionCoeff", new Option_Float(PerIvanDefaults::speedPrecisionCoeff));
-    oc.addDescription("device.perivan.speedPrecisionCoeff", TL("Per Ivan Device"), TL("Speed noise rate coefficient on headway."));
+    oc.addDescription("device.perivan.speedPrecisionCoeff", TL("Per Ivan Device"), TL("Precision rate decrease due to speed."));
     oc.doRegister("device.perivan.optimalPerceptionSpeed", new Option_Float(PerIvanDefaults::optimalPerceptionSpeed));
-    oc.addDescription("device.perivan.optimalPerceptionSpeed", TL("Per Ivan Device"), TL("Speed range without increase in noise."));
+    oc.addDescription("device.perivan.optimalPerceptionSpeed", TL("Per Ivan Device"), TL("Speed range without decrease in precision due to speed."));
     oc.doRegister("device.perivan.param1", new Option_Float(PerIvanDefaults::param1));
-    oc.addDescription("device.perivan.param1", TL("Per Ivan Device"), TL("calibration parameter 1 - scale precision."));
+    oc.addDescription("device.perivan.param1", TL("Per Ivan Device"), TL("auxiliary calibration parameter 1 - dev."));
     oc.doRegister("device.perivan.param2", new Option_Float(PerIvanDefaults::param2));
-    oc.addDescription("device.perivan.param2", TL("Per Ivan Device"), TL("calibration parameter 2 - scale wiener process."));
+    oc.addDescription("device.perivan.param2", TL("Per Ivan Device"), TL("auxiliary calibration parameter 2 - dev."));
 }
 
 void
@@ -158,7 +158,6 @@ double
 MSDevice_PerIvan::getDistanceErrorShape(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.distanceErrorShape", PerIvanDefaults::distanceErrorShape, false);
 }
-
 double
 MSDevice_PerIvan::getMinDistancePrecision(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.minDistancePrecision", PerIvanDefaults::minDistancePrecision, false);
@@ -187,7 +186,6 @@ double
 MSDevice_PerIvan::getParam2(const SUMOVehicle& v, const OptionsCont& oc) {
     return getFloatParam(v, oc, "perivan.param2", PerIvanDefaults::param2, false);
 }
-
 
 // ---------------------------------------------------------------------------
 // MSDevice_PerIvan-methods
@@ -253,9 +251,6 @@ MSDevice_PerIvan::update() {
 
 std::string
 MSDevice_PerIvan::getParameter(const std::string& key) const {
-#ifdef DEBUG_DSDEVICE
-    std::cout << "MSDevice_PerIvan::getParameter(key=" << key << ")" << std::endl;
-#endif
     if (key == "WienerProcessState") {
         return toString(myPerIvan->getWienerProcessState());
     }
@@ -312,7 +307,6 @@ MSDevice_PerIvan::getParameter(const std::string& key) const {
     }
     throw InvalidArgument("Parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
 }
-
 
 void
 MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value) {
@@ -371,6 +365,5 @@ MSDevice_PerIvan::setParameter(const std::string& key, const std::string& value)
         throw InvalidArgument("Parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
     }
 }
-
 
 /****************************************************************************/

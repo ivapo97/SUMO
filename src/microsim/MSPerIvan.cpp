@@ -13,9 +13,7 @@
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPerIvan.cpp
-/// @author  Melanie Weber
-/// @author  Andreas Kendziorra
-/// @author  Michael Behrisch
+/// @author  Ivan Postigo
 /// @date    Thu, 12 Jun 2014
 ///
 // The common superclass for modelling transportable objects like persons and containers

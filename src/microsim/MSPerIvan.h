@@ -22,7 +22,6 @@
 
 #pragma once
 #include <config.h>
-
 #include <memory>
 #include <utils/common/SUMOTime.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
@@ -72,11 +71,9 @@ private:
 /// @class MSSimplePerIvan
 /// @brief Provides an interface to a perception error 
 class MSSimplePerIvan {
-
 public:
     MSSimplePerIvan(MSVehicle* veh);
     virtual ~MSSimplePerIvan() {};
-
     /// @name Getter methods
     ///@{
     inline double getTimeCorrelationWindow() const {
@@ -134,7 +131,6 @@ public:
         return myWienerProcess.getState();
     };
     ///@}
-
 
     /// @name Setter methods
     ///@{
@@ -195,14 +191,10 @@ public:
     /// @brief Trigger updates for the wiener process and reaction + delay
     void update();
 
-    /// @brief This method checks whether the errorneous speed difference that would be perceived for this step
-    ///        differs sufficiently from the previously perceived to be actually perceived. If so, it sets the
-    ///        flag myReactionFlag[objID]=true, which should be checked just after the call to this method because
-    ///        it will be overwritten by subsequent calls.
+    /// @brief Computes the distance error and returns the perceived distance, also computes the perceived relative speed
     double getPerceivedSpeedDifference(const double trueSpeedDifference, const void* objID);
-    /// @see myHeadwayPerceptionError
+    /// @brief Returns the perceived relative speed if is not far off from the true speed difference.
     double getPerceivedDistance(const double trueDistance, const double ownSpeed, const void* objID = nullptr);
-    /// @}
 
     inline void lockDebug() {
         myDebugLock = true;
@@ -223,37 +215,37 @@ private:
     void updateReactionTime();
 
 private:
-    /// @brief Vehicle corresponding to this per ivan
+    /// @brief Vehicle corresponding to this perivan device
     MSVehicle* myVehicle;
     /// @brief Vehicle's WienerProcess
     WienerProcess myWienerProcess;
-    /// @brief Coefficient controlling the impact of awareness on the time scale of the error process
+    /// @brief Timewindow in which the error estimation is correlated. [s]
     double myTimeCorrelationWindow;
     /// @brief Perception delay
     double myPerceptionDelay;
-    /// @brief Persistent headway error
+    /// @brief Min. (best) distance accuracy error
     double myMinDistanceError;
-    /// @brief Perception range without increase in errors
+    /// @brief Perception distance range without increase in accuracy error
     double myOptimalPerceptionDistance;
-    /// @brief Max. perception range
+    /// @brief Max. perception distance range
     double myMaximalPerceptionDistance;
-    /// @brief Headway error at max. range
+    /// @brief Accuracy error at max. perception distance range.
     double myMaxDistanceError;
-    /// @brief Headway error function shape    
+    /// @brief Decay of accuracy (linear, quadratic..) 
     double myDistanceErrorShape;
-    /// @brief Min. distance noise on headway   
+    /// @brief Min. (best) precision due to distance
     double myMinDistancePrecision;
-    /// @brief Min. speed noise on headway
+    /// @brief Min. (best) precision due to speed
     double myMinSpeedPrecision;
-    /// @brief Distance noise rate headway coefficient
+    /// @brief Precision decay rate due to distance
     double myDistancePrecisionCoeff;
-    /// @brief Speed noise rate headway coefficient
+    /// @brief Precision decay rate due to speed
     double mySpeedPrecisionCoeff;
-    /// @brief Speed range without increase in errors
+    /// @brief Speed range without decrease in precision
     double myOptimalPerceptionSpeed;
-    /// @brief Auxiliary calibration parameter 1
+    /// @brief Auxiliary parameter 1
     double myParam1;
-    /// @brief Auxiliary calibration parameter 2
+    /// @brief Auxiliary parameter 2
     double myParam2;
     /// @brief Action step length (reaction time+perception delay)
     double myActionStepLength;
@@ -268,8 +260,8 @@ private:
     /// @brief Time point of the last state update
     double myLastUpdateTime;
 
-    /// @brief The assumed gaps to different objects
-    /// @todo: update each step to incorporate the assumed change given a specific speed difference
+    /// @brief The perceived distances to different objects
+    /// @todo: update each step if possible (?)
     std::map<const void*, double> myPerceivedDistances;
     /// @brief The last perceived speed differences to the corresponding objects
     std::map<const void*, double> myPerceivedSpeedDifference;

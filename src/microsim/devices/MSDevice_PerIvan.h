@@ -93,7 +93,6 @@ private:
     static double getParam2(const SUMOVehicle& v, const OptionsCont& oc);
     /// @}
 
-
 public:
     /// @brief Destructor.
     ~MSDevice_PerIvan() {};
