@@ -40,6 +40,7 @@
 #include <microsim/transportables/MSTransportableControl.h>
 #include <microsim/transportables/MSPModel.h>
 #include <utils/common/MsgHandler.h>
+#include <microsim/MSPerIvan.h>
 
 #define OPPOSITE_OVERTAKING_SAFE_TIMEGAP 0.0
 #define OPPOSITE_OVERTAKING_SAFETYGAP_HEADWAY_FACTOR 0.0
@@ -607,7 +608,15 @@ MSLaneChanger::getRealLeader(const ChangerIt& target) const {
             std::cout << "  found leader=" << neighLead->getID() << "\n";
         }
 #endif
-        return std::pair<MSVehicle* const, double>(neighLead, neighLead->getBackPositionOnLane(target->lane) - vehicle->getPositionOnLane() - vehicle->getVehicleType().getMinGap());
+        if (vehicle->hasPerIvan()) {
+            // Obtain perceived gap from per ivan
+            double realDistance = neighLead->getBackPositionOnLane(target->lane) - vehicle->getPositionOnLane() - vehicle->getVehicleType().getMinGap();
+            const double perceivedDistance = vehicle->getPerIvan()->getPerceivedDistance(realDistance, vehicle->getSpeed(), neighLead);
+            return std::pair<MSVehicle* const, double>(neighLead, perceivedDistance);
+        }
+        else {
+            return std::pair<MSVehicle* const, double>(neighLead, neighLead->getBackPositionOnLane(target->lane) - vehicle->getPositionOnLane() - vehicle->getVehicleType().getMinGap());
+        }
     }
 }
 
@@ -684,8 +693,16 @@ MSLaneChanger::getRealFollower(const ChangerIt& target) const {
             std::cout << "found follower '" << neighFollow->getID() << "'." <<  std::endl;
         }
 #endif
-        return std::pair<MSVehicle* const, double>(neighFollow,
+        if (vehicle->hasPerIvan()) {
+            // Obtain perceived gap from perIvan
+            double realDistance = vehicle->getPositionOnLane() - vehicle->getVehicleType().getLength() - neighFollow->getPositionOnLane() - neighFollow->getVehicleType().getMinGap();
+            const double perceivedDistance = vehicle->getPerIvan()->getPerceivedDistance(realDistance, vehicle->getSpeed(), neighFollow);
+            return std::pair<MSVehicle* const, double>(neighFollow, perceivedDistance);
+        }
+        else {
+            return std::pair<MSVehicle* const, double>(neighFollow,
                 vehicle->getPositionOnLane() - vehicle->getVehicleType().getLength() - neighFollow->getPositionOnLane() - neighFollow->getVehicleType().getMinGap());
+        }
     }
 }
 
